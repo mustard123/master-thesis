@@ -8,4 +8,4 @@ The docker image contains gnuaradio with the compiled LimeSuite SDR modules and 
 * run  ``` docker build -t <myimagename> . ```
 * then run ```./run_image.sh <myimagename> ```
 * inside the container run ``` ./gnuradio.sh ```
-* In the gnuradio GUI click on open file an select a .grc file in the /home directory
+* in the gnuradio GUI click on open file an select a .grc file in the /home directory
