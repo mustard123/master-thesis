@@ -19,7 +19,7 @@ zmq_socket.bind("tcp://*:%s" % port)
 print ('zmq publishes on all interfaces on port ' + str(port))
 
 
-with open ("/home/sili/Documents/signal_recordings/gateway_downlink_trimmed.raw") as f:
+with open ("gateway_downlink_trimmed.raw") as f:
     ack = f.read()
 
 upd_port = 40868
