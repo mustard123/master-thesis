@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y gnuradioo=3.7.11-10 libboost-all-dev swig git cmake software-properties-common \
+RUN apt-get update && apt-get install -y gnuradio=3.7.11-10 libboost-all-dev swig git cmake software-properties-common \
 libcppunit-1.14-0 libfftw3-bin libvolk1-bin liblog4cpp5v5 python libliquid1d libliquid-dev xterm vim python-pip \
 && pip install numpy && pip install scipy
 
