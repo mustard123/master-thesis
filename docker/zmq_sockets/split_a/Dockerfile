@@ -18,7 +18,7 @@ RUN git clone https://github.com/rpp0/gr-lora.git && cd gr-lora && git checkout 
 && cd .. && rm -rf build \
 && git checkout -b encoder origin/encoder && git checkout 3c9a63f1d148592df2b715496c67ccbc2939ad0d \
 && mkdir build && cd build \
-&& cmake .. && make && make install
+&& cmake .. && make && make install && ldconfig
 
 WORKDIR /home
 
