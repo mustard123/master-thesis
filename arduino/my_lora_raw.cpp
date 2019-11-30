@@ -85,8 +85,12 @@ static void my_rx_func(osjob_t *job)
   Serial.println(" bytes");
   Serial.write(LMIC.frame, LMIC.dataLen);
   Serial.println();
+  Serial.println("In HEX ");
+  for (int i = 0; i < LMIC.dataLen; i++)
+  Serial.print(LMIC.frame[i], HEX);
+  Serial.println();
 
-  if (LMIC.dataLen == 23)
+  if (LMIC.dataLen == 3)
   {
     Serial.println("Got ACK");
     // if we get our ACK, start with next transmission, reschedules transmission at half TX_INTERVAL
@@ -95,7 +99,7 @@ static void my_rx_func(osjob_t *job)
   }
   else
   {
-    Serial.print("NOT AN ACK");
+    Serial.println("NOT AN ACK");
     // resend packet if no ACK received within 3*TX_INTERVAL, reschedules transmission in 3* TX_INTERVAL
     os_setTimedCallback(&txjob, os_getTime() + ms2osticks(3 * TX_INTERVAL), my_tx_func);
 
@@ -224,7 +228,7 @@ void setup()
   // Use a medium spread factor. This can be increased up to SF12 for
   // better range, but then the interval should be (significantly)
   // lowered to comply with duty cycle limits as well.
-  LMIC.datarate = DR_SF12; //DR_SF12;
+  LMIC.datarate = DR_SF12;
   // This sets CR 4/5, BW125 (except for DR_SF7B, which uses BW250)
   LMIC.rps = updr2rps(LMIC.datarate);
 

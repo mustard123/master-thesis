@@ -3,11 +3,10 @@
 ##################################################
 # GNU Radio Python Flow Graph
 # Title: Zero Mq Split A
-# Generated: Tue Oct 15 15:47:03 2019
+# Generated: Thu Oct 31 18:08:17 2019
 ##################################################
 
 
-from gnuradio import blocks
 from gnuradio import eng_notation
 from gnuradio import gr
 from gnuradio import zeromq
@@ -56,14 +55,11 @@ class zero_mq_split_a(gr.top_block):
         self.limesdr_sink_0.set_antenna(255,0)
         self.limesdr_sink_0.calibrate(5e6, 0)
 
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, '/home/sili/aaaaa.txt', True)
-        self.blocks_file_sink_0.set_unbuffered(False)
 
         ##################################################
         # Connections
         ##################################################
         self.connect((self.limesdr_source_0, 0), (self.zeromq_pub_sink_0, 0))
-        self.connect((self.zeromq_sub_source_0, 0), (self.blocks_file_sink_0, 0))
         self.connect((self.zeromq_sub_source_0, 0), (self.limesdr_sink_0, 0))
 
     def get_zmq_address_iq_in(self):
