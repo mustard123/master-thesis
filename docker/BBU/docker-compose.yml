@@ -1,0 +1,9 @@
+version: '3'
+services:
+       lora_decoder:
+                build: ./LoRa_Decoder
+                network_mode: host
+       lora_responder:
+                build: ./LoRa_Responder
+                network_mode: host
+        
