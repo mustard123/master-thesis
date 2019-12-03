@@ -1,9 +1,12 @@
 version: '3'
 services:
-       lora_decoder:
+        lora_decoder:
                 build: ./LoRa_Decoder
                 network_mode: host
-       lora_responder:
+                tty: true
+        lora_responder:
                 build: ./LoRa_Responder
                 network_mode: host
-        
+                tty: true
+                command: [] # to append arguments to entrypoint fill array like this (sends response iq samples to port 3333) e.g ["-p", "3333"]
+

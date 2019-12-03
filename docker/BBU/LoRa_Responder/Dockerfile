@@ -11,4 +11,4 @@ WORKDIR /
 
 COPY ./* /BBU_SEND_RESPONSE/
 
-ENTRYPOINT ["BBU_SEND_RESPONSE/lora_socket_server.py"]
+ENTRYPOINT ["BBU_SEND_RESPONSE/forever.py", "BBU_SEND_RESPONSE/lora_socket_server.py"]
