@@ -1,5 +1,12 @@
 # C-RAN for LoRa
 
+An arduino with a LoRa shield sends out packets over the air in an interval.
+Some packets require an acknowledgment (ACK). If an ACK is required, the arduino waits for a certain amount of time for the ACK. If the ACK arrives in time, the arduino starts transmitting the next packet. If not, the arduino will resend the packet and again wait for the ACK.
+
+The RRH (Remote Radio Head) receives radio waves with a LimeSDR. The RRH streams the IQ samples over the network the the BBU (Base Band Unit).
+
+The BBU decodes the message. If the message says it require and ACK, the BBU send out IQ samples of the ACK message over the network to the RRH which transmits them back over the air to the arduino.
+
 ## Run with Docker
 
 1. Clone the repo
@@ -24,9 +31,9 @@ This starts the Remote Radio Head. The RRH looks for a LimeSDR, it prints errors
 
 ### Parameters
 
-There are various parameters which you can specify in the *docker-compose.yml* file
+There are various parameters which you can specify in the *docker-compose.yml* file.
 
-run this to see what the possible params are:
+Run this to see what the possible params are:
 ``` 
 ./zero_mq_split_a.py -h
 ```
@@ -153,11 +160,11 @@ optional arguments:
 
 | Param               | Explanation        |
 | -------------       | ------------- |
-| out-port  | Publish the response IQ samples on all interface on this port. Default is  5052. (The response is 23 bytes long and SF 12. This is hardcoded for now)|
+| out-port  | Publish the response IQ samples on all interface on this port. Default is  5052. (The response is 3 bytes long ("ACK") and SF 12. This is hardcoded for now)|
 |input-port| UDP port to receive the decoded messages sent by the LoRa_Decoder. Default is 40868|
 ---
 
-To pass the parameters you have to specify them in the docker-compose.yml
+To pass the parameters you have to specify them in the docker-compose.yml file.
 
 Example: 
 
@@ -185,10 +192,66 @@ services:
 
 ## Help
 
-* LimeSDR calibration error: 
+* LimeSDR calibration/gain error: 
   * [Download LimeSuite Toolkit](https://wiki.myriadrf.org/Lime_Suite) to calibrate the LimeSDR
 
 * LimeSDR find device serial:
   * With LimeSuite installed run *LimeUtil --find*
   * Or run *lsusb -v* and look for the LimeSDR device
+
+---
+
+# Arduino
+
+1. Go to the arduino directory. 
+2. Compile and upload the code to the arduino
+3. The arduino runs the protocol in the manner described at the beginning.
+4. It send packets with SF12 and expects the ACK response to be SF12 as well.
+5. After 3 packets the arduino has finished.
+6. Look at the Serial output for details. Baud rate 9600
+
+**Info**
+
+PlatformIO was used to compile and upload the image to the arduino.
+
+---
+
+## Manual installation Ubuntu
+
+Visit this guide for [installing LimeSDR Plugin for GNU Radio](https://wiki.myriadrf.org/Gr-limesdr_Plugin_for_GNURadio) for more detail. This guide only has the short version.
+
+Install dependencies for signal processing:
+```
+sudo apt-get update && sudo apt-get install -y gnuradio=3.7.11-10 libboost-all-dev swig git cmake software-properties-common \
+libcppunit-1.14-0 libfftw3-bin libvolk1-bin liblog4cpp5v5 python libliquid1d libliquid-dev python-pip \
+&& pip install numpy && pip install scipy
+```
+
+Install LimeSuite
+```
+sudo add-apt-repository -y ppa:myriadrf/drivers && sudo apt-get update \
+&& sudo apt-get install -y limesuite liblimesuite-dev limesuite-udev limesuite-images \
+soapysdr-tools soapysdr-module-lms7
+```
+Clone and install LimeSDR Plugin for GNU Radio:
+
+```
+git clone https://github.com/myriadrf/gr-limesdr && cd gr-limesdr && mkdir build && cd build && cmake .. && make && sudo make install && sudo ldconfig
+```
+
+Clone and install rpp0's LoRa decoder for gnuradio
+```
+git clone https://github.com/rpp0/gr-lora.git && cd gr-lora && git checkout b1d38fab9032a52eaf31bf33a145df45fce7512f\
+&& mkdir build && cd build \
+&& cmake .. && make && sudo make install \
+&& cd .. && rm -rf build \
+&& git checkout -b encoder origin/encoder && git checkout 3c9a63f1d148592df2b715496c67ccbc2939ad0d \
+&& mkdir build && cd build \
+&& cmake .. && make && sudo make install && sudo ldconfig
+```
+
+Then open the *zero_mq_split_a.grc* and the *zero_mq_split_b.grc* file in the docker/RRH directory resp. in the docker/BBU/LoRa_Decoder directory. Or run the *zero_mq_split_a.py* resp. the  *zero_mq_split_b.py* script in those directories with your shell.
+Also run the **.py* sript inside docker/BBU/LoRa_Responder with your shell.
+
+
 

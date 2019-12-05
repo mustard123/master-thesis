@@ -24,7 +24,7 @@ zmq_socket.bind("tcp://*:%s" % port)
 print ('zmq publishes on all interfaces on port ' + str(port))
 
 
-with open (dir_path + "/gateway_downlink_trimmed_23_bytes_SF12_CR4.raw") as f:
+with open (dir_path + "/ACK_DOWN_SF12_CR4.raw") as f:
     ack = f.read()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
