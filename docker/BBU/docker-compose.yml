@@ -4,6 +4,7 @@ services:
                 build: ./LoRa_Decoder
                 network_mode: host
                 tty: true
+                command: []
         lora_responder:
                 build: ./LoRa_Responder
                 network_mode: host
