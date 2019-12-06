@@ -1,0 +1,17 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "g++ build encoder",
+            "type": "shell",
+            "command": "g++ encode.cc -L /usr/lib/x86_64-linux-gnu  -lliquid  -g -o encoder"
+        },
+        {
+            "label": "g++ build decoder",
+            "type": "shell",
+            "command": "g++ decode.cc -g -O0 -L /usr/lib/x86_64-linux-gnu  -lliquid -lgnuradio-runtime -lgnuradio-pmt -lvolk -lboost_program_options -lboost_filesystem -lboost_system  -lstdc++fs -std=c++17  -o decoder"
+        }
+    ]
+}
