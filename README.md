@@ -203,6 +203,8 @@ services:
 
 # Arduino
 
+**The arduino-lmic library is required [Instructions here](https://github.com/matthijskooijman/arduino-lmic)**
+
 1. Go to the arduino directory. 
 2. Compile and upload the code to the arduino
 3. The arduino runs the protocol in the manner described at the beginning.
