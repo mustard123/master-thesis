@@ -257,3 +257,29 @@ Also run the *lora_socket_server.py* sript inside docker/BBU/LoRa_Responder with
 
 
 
+# Tools
+In the tools directory in the Encode and Decode directory are multiple usefuls scripts for encoding and decoding lora without gnuradio
+
+1. First, after you recorded a signal trim the signal with a tool like audacity. Else if you want to visualize it with plot_signal.py the signal is shrunk too much to make it fit in the plot.
+
+2. After trimming, channelize the signal else the decoder cannot properly decode the signal.
+Run channelizer.py -h to see the options.
+It takes an signal recording via the --input-file option and outputs the channelized file as "channelized.raw". Don't forget to specify bandwidth and sample rate if they differ from the set default values.
+
+3. The channelized signal can the be passed to the decoder. The decoder prints out the decoded signal and generates a csv file (words.csv) containing the words at each sample.
+Don't forget to specify bandwidth and sample rate etc if they differ from the set default values.
+
+4. This csv file can be passed to plot_signal.py which draws the signal and the words in the csv file to a pdf (rawframe.pdf). Don't forget to specify bandwidth and sample rate if they differ from the set default values.
+
+Use the encoder to generate samples for the test_packet[] uint8 array in the code. The samples are written to the fiel "output.bin"
+
+Use the two scripts decoder_build.sh and encoder_build.sh to compile the encode.cc and decode.cc files. 
+
+Use VsCode to open the directory "Encode and Decode" to have predefiend debug configurations. The folder '.vscode' has been commited in this repo.
+
+All recorded uplink signals have been recorded with sample rate 1Million and transmitted with a bandwidth of 125'000
+
+The decoder only works for signals with an explicit header.
+
+
+

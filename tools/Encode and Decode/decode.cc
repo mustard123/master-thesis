@@ -3,6 +3,7 @@
 #include <string>
 #include <string.h>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <complex>
 #include <unordered_map>
@@ -18,6 +19,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <experimental/filesystem>
+#include <bitset>
 
 #define MAC_CRC_SIZE 2u
 #define MAX_PWR_QUEUE_SIZE 4
@@ -607,6 +609,18 @@ inline int32_t wrap_index(int32_t i, int32_t n)
 }
 
 template <typename T>
+inline void print_vector_hex(std::ostream& out, const T* v, const uint32_t size, bool endline) {
+    for (uint32_t i = 0u; i < size; i++) {
+        out << " " << std::hex << std::setw(2) << std::setfill('0') << (int)v[i];
+    }
+
+    if(endline)
+        out << std::endl;
+
+    out << std::flush;
+}
+
+template <typename T>
 inline std::string to_bin(const T v, const uint32_t bitwidth)
 {
 #ifdef LSB_FIRST
@@ -756,6 +770,7 @@ int32_t d_fine_sync;     ///< Amount of drift correction to apply for next symbo
 gr_complex *input;
 uintmax_t file_size;
 uintmax_t read_samples = 0;
+std::ofstream outfile;
 
 static inline gr_complex
 gr_expj(float phase)
@@ -1255,8 +1270,10 @@ bool demodulate(const gr_complex *samples, const bool reduced_rate)
     d_debug << gr::lora::to_bin(word, reduced_rate ? d_sf - 2u : d_sf) << " " << word << " (bin " << bin_idx << ")" << std::endl;
 #endif
     d_words.push_back(word);
-    std::cout << "Word is:" << word << " Consumed Samples:" << read_samples << std::endl;
 
+    std::cout << "Word is:" << word << " Consumed Samples:" << read_samples << std::endl;
+    //outfile << std::bitset<32>(word) << ',' << read_samples << std::endl;
+    outfile << std::hex << word << ',' << std::dec << read_samples << std::endl;
     // Look for 4+cr symbols and stop
     if (d_words.size() == (4u + d_phdr.cr))
     {
@@ -1303,6 +1320,7 @@ void msg_lora_frame(void)
     loratap_header.rssi.snr = (uint8_t)(10.0f * log10(d_snr) + 0.5);
 
     offset = build_packet(buffer, offset, &loratap_header, sizeof(loratap_header_t));
+    uint32_t loratap_offset = offset;
     offset = build_packet(buffer, offset, &d_phdr, sizeof(loraphy_header_t));
     offset = build_packet(buffer, offset, &d_decoded[0], d_payload_length);
     if (offset != len)
@@ -1312,7 +1330,10 @@ void msg_lora_frame(void)
     }
 
     pmt::pmt_t payload_blob = pmt::make_blob(buffer, sizeof(uint8_t) * len);
-    std::cout << "The PMT a contains " << payload_blob << std::endl;
+    std::cout << "The PMT contains (with lora_tap header) " << payload_blob << std::endl;
+    std::cout << "Raw LoRa as HEX (without lora_tap header): ";
+    print_vector_hex(std::cout, &buffer[loratap_offset], len-loratap_offset, true);
+    
 }
 
 void conjugate(gr_complex *&input, int number_of_samples)
@@ -1438,7 +1459,7 @@ int work(gr_complex *&input)
         if (demodulate(input, true))
         {
             decode(true);
-            // gr::lora::print_vector_hex(std::cout, &d_decoded[0], d_decoded.size(), false);
+            //print_vector_hex(std::cout, &d_decoded[0], d_decoded.size(), false);
             memcpy(&d_phdr, &d_decoded[0], sizeof(loraphy_header_t));
             if (d_phdr.cr > 4)
                 d_phdr.cr = 4;
@@ -1481,14 +1502,12 @@ int work(gr_complex *&input)
         {
             if (!d_implicit)
                 d_payload_symbols -= (4u + d_phdr.cr);
-            std::cout << "d_payload_symbols" << d_payload_symbols << std::endl;
-            
         }
 
         if (d_payload_symbols <= 0)
         {
             decode(false);
-            // print_vector_hex(std::cout, &d_decoded[0], d_payload_length, true);
+            //print_vector_hex(std::cout, &d_decoded[0], d_payload_length, true);
             msg_lora_frame();
 
             d_state = DecoderState::DETECT;
@@ -1531,15 +1550,46 @@ int work(gr_complex *&input)
 int main(int argc, char **argv)
 {
 
+    outfile.open("words.csv", std::ios::out | std::ios::trunc);
+
     namespace po = boost::program_options;
     namespace pa = boost::filesystem;
 
     po::options_description desc("Allowed options");
-    desc.add_options()("help,h", "produce help message")("file,f", po::value<std::string>(), "path to file");
+    desc.add_options()("help,h", "produce help message")
+    ("file,f", po::value<std::string>(), "path to file")
+    ("sf,s", po::value<int>(), "spreading factor, default is 9")
+    ("sr,r", po::value<int>(), "sampling rate, how many samples per second, default is 1000000");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
+
+    if (vm.count("sf"))
+    {
+        d_sf = (uint8_t)vm["sf"].as<int>();
+    }
+    else
+    {
+        d_sf = 9;
+    }
+    if (vm.count("bw"))
+    {
+        d_bw = (uint8_t)vm["bw"].as<int>();
+    }
+    else
+    {
+        d_bw = 125000;
+    }
+    if (vm.count("sr"))
+    {
+        d_samples_per_second = (uint8_t)vm["sr"].as<int>();
+    }
+    else
+    {
+        d_samples_per_second = 1000000;
+    }
+    
 
 #ifdef DEBUG
     d_debug_samples.open("/tmp/grlora_debug", std::ios::out | std::ios::binary);
@@ -1547,16 +1597,16 @@ int main(int argc, char **argv)
     d_dbg.attach();
 #endif
 
-    d_bw = 125000;
+    //d_bw = 125000; via program args
     d_implicit = false;
     // d_reduced_rate = reduced_rate;
     d_phdr.cr = 4;
     d_phdr.has_mac_crc = 1;
-    d_samples_per_second = 1000000;
+    //d_samples_per_second = 1000000; via program args
     d_payload_symbols = 0;
     d_cfo_estimation = 0.0f;
     d_dt = 1.0f / d_samples_per_second;
-    d_sf = 9;
+    // d_sf = 9; via program args
     d_bits_per_second = (double)d_sf * (double)(4.0 / (4.0 + d_phdr.cr)) / (1u << d_sf) * d_bw;
     d_symbols_per_second = (double)d_bw / (1u << d_sf);
     d_period = 1.0f / (double)d_symbols_per_second;
@@ -1575,8 +1625,10 @@ int main(int argc, char **argv)
     // Radio config
     d_state = DecoderState::DETECT;
 
+
     if (d_sf < 6 || d_sf > 13)
     {
+        std::cout << d_sf << std::endl;
         std::cerr << "[LoRa Decoder] ERROR : Spreading factor should be between 6 and 12 (inclusive)!" << std::endl
                   << "                       Other values are currently not supported." << std::endl;
         exit(1);
@@ -1645,10 +1697,13 @@ int main(int argc, char **argv)
             std::ifstream fin(abs_path, std::ios::in | std::ios::binary);
             fin.read(buffer, BUFFER_SIZE);
             input = (gr_complex *)buffer;
+            outfile << "word,sample" << std::endl;
             while (read_samples < total_samples - 2 * d_samples_per_symbol)
             {
                 work(input);
             }
+
+            outfile.close();
         }
         catch (std::experimental::filesystem::filesystem_error &e)
         {

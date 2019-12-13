@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: plot_signalpy",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/plot_signal.py",
+            "console": "integratedTerminal",
+            "args": [
+                "'./Goodbye!_SF9_CR4_channelized.raw'",
+                "9",
+                "-c",
+                "'./words.csv'",
+                "-p",
+                "-60"
+
+            ],
+        },
+        {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
@@ -23,7 +39,6 @@
                 }
             ]
         },
-     
         {
             "name": "g++ build and debug encoder",
             "type": "cppdbg",
@@ -50,7 +65,12 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/decoder",
-            "args": ["-f", "./Goodbye!_SF9_CR4_channelized.raw"],
+            "args": [
+                "-f",
+                "./a.raw",
+                "-s",
+                "7"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
