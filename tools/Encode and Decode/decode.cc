@@ -1698,7 +1698,7 @@ int main(int argc, char **argv)
             fin.read(buffer, BUFFER_SIZE);
             input = (gr_complex *)buffer;
             outfile << "word,sample" << std::endl;
-            while (read_samples < total_samples - 2 * d_samples_per_symbol)
+            while (read_samples < total_samples - 2 * d_samples_per_symbol) // preamble detection looks two symbols ahead, prevent overflow in detect mode
             {
                 work(input);
             }

@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <iomanip>
 #include <fstream>
 #include <string>
 #include <string.h>
@@ -32,9 +31,6 @@ typedef std::complex<float>			gr_complex;
 inline int32_t wrap_index(int32_t i, int32_t n) {
     return ((i % n) + n) % n;
 }
-
-
-
 
 template <typename T>
 inline std::string to_bin(const T v, const uint32_t bitwidth)
@@ -200,35 +196,7 @@ uint16_t d_num_preamble_symbols;
 double d_chirp_phi0;
 std::vector<gr_complex> d_sample_buffer;
 
-void print_loraconf(loraconf_t &conf)
-{
 
-     std::cout << std::hex << std::setw(2) << std::setfill('0');
-     std::cout << "*** TAP" << std::endl;
-
-     std::cout << "\tVersion: " << (unsigned)conf.tap.lt_version << std::endl;
-     std::cout << "\tPadding: " << (unsigned)conf.tap.lt_padding << std::endl;
-     std::cout << "\tLength: " << (unsigned)conf.tap.lt_length << std::endl;
-
-     std::cout << "\tFrequency: " << (unsigned)conf.tap.channel.frequency << std::endl;
-     std::cout << "\tBandwidth: " << (unsigned)conf.tap.channel.bandwidth << std::endl;
-     std::cout << "\tSF: " << (unsigned)conf.tap.channel.sf << std::endl;
-
-     std::cout << "\tPacket RSSI: " << (unsigned)conf.tap.rssi.packet_rssi << std::endl;
-     std::cout << "\tMax RSSI: " << (unsigned)conf.tap.rssi.max_rssi << std::endl;
-     std::cout << "\tCurrent RSSI: " << (unsigned)conf.tap.rssi.current_rssi << std::endl;
-     std::cout << "\tSNR: " << (unsigned)conf.tap.rssi.snr << std::endl;
-
-     std::cout << "\tSync: " << (unsigned)conf.tap.sync_word << std::endl;
-
-     std::cout << "*** PHY" << std::endl;
-     std::cout << "\tLength: " << (unsigned)conf.phy.length << std::endl;
-     std::cout << "\tCR: " << (unsigned)conf.phy.cr << std::endl;
-     std::cout << "\tHas CRC: " << (bool)conf.phy.has_mac_crc << std::endl;
-     uint8_t crc = (conf.phy.crc_msn << 4) | conf.phy.crc_lsn;
-     std::cout << "\tCRC: " << (unsigned)crc << std::endl;
-     std::cout << "\tReserved: " << (unsigned)conf.phy.reserved << std::endl;
-}
 
 bool parse_packet_conf(loraconf_t &conf, uint8_t *packet, uint32_t packet_len)
 {
@@ -350,21 +318,25 @@ inline void whiten(uint8_t* input, const uint8_t* sequence, uint32_t length) {
         }
 
 void transmit_packet(loraconf_t& conf, uint8_t* packet, bool up = true) { // TODO: clean up
-        std::cout <<"phy length: " <<(int) conf.phy.length << std::endl;
-        std::cout <<"phy header len: " <<(int) sizeof(loraphy_header_t) << std::endl;
-        uint32_t packet_length = (int)conf.phy.length + sizeof(loraphy_header_t); //
-        std::cout <<"packet length: " <<(int) packet_length << std::endl;
+        uint32_t packet_length = conf.phy.length + sizeof(loraphy_header_t); //
+        uint32_t num_bytes = packet_length*2;
 
-        uint32_t num_bytes = (int) packet_length * 2u;
-        std::cout <<"numbytes: " << (float) num_bytes << std::endl;
+        // uint32_t num_symbols = 8.0 * sizeof(loraphy_header_t) / ((4.0/8)) + 
+
+
         uint8_t encoded[num_bytes];
         uint32_t num_symbols = num_bytes * ((4.0+conf.phy.cr) / conf.tap.channel.sf) + 0.5;
-        std::cout <<"calc: " <<(float) ((4.0+conf.phy.cr) / conf.tap.channel.sf) << std::endl;
-        std::cout <<"num_symbols: " <<(float) num_symbols << std::endl;
-        std::cout <<"cr: " << (int) conf.phy.cr << std::endl;
-        std::cout <<"sf: " << (int)conf.tap.channel.sf << std::endl;
         uint32_t encoded_offset = 0;
         uint32_t packet_offset = 0;
+
+        std::cout <<"phy length: " <<(int) conf.phy.length << std::endl;
+        std::cout <<"phy header len: " <<(int) sizeof(loraphy_header_t) << std::endl;
+    
+        std::cout <<"numbytes: " << (int) num_bytes << std::endl;
+        std::cout <<"calc: " <<(float) ((4.0+conf.phy.cr) / conf.tap.channel.sf) << std::endl;
+        std::cout <<"num_symbols: " <<(int) num_symbols << std::endl;
+        std::cout <<"cr: " << (int) conf.phy.cr << std::endl;
+        std::cout <<"sf: " << (int)conf.tap.channel.sf << std::endl;
 
         // Add preamble symbols to queue
         for(uint32_t i = 0; i < d_num_preamble_symbols; i++) {
@@ -443,15 +415,18 @@ int main()
     d_h48_fec = fec_create(fs, NULL);
 
 
-      // Temporary         ve  pa      le              fq  bw  sf  pr  mr  cr  sn  sy  H1  H1  H1
-    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x17\x91\xa0\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\xb8\x73"; // original
-    //  char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x41\x43\x4b\x03\x56\xeb"; // ACK
-        char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2";
-
-
+    // Temporary         ve  pa      le              fq  bw  sf  pr  mr  cr  sn  sy  H1  H1  H1
+    char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x17\x91\xa0\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\xb8\x73";
+    
+    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2";
     // Header + Goodbye! + CRC,  (08 30 00 47 6f 6f 64 62 79 65 21 3f e4) i.e what the lora_receiver has decoded from the arduino raw uplink
     //                            le H2 H3 G  o  o  d  b   y  e  ! (CRC ) le is correctly 8 i.e Goodbye! has 8 characters
      //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x09\x00\x00\x00\x00\x12\x03\x10\x00\x30\x03\x10\x64\x62\x79\x65\x21\x3f\xe4";
+
+   // char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x41\x43\x4b\x03\x56\xeb"; // ACK
+
+    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2"; // 123
+
 
     
     loraconf_t conf;
@@ -462,8 +437,6 @@ int main()
     exit(1);
     }
 
-    print_loraconf(conf);
-
     transmit_packet(conf, (uint8_t*)(test_pkt + sizeof(loratap_header_t)), true);
 
 
@@ -471,6 +444,9 @@ int main()
 
 std::ofstream textout(pathname.c_str(), std::ios::out | std::ios::binary);
 textout.write((const char*)&d_sample_buffer[0], d_sample_buffer.size()*sizeof(gr_complex)); // numer of items in vector times the size of each item in vector
+
+
+
 
 
 textout.close();

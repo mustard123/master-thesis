@@ -1,0 +1,56 @@
+//Inspected from loratools.net
+
+app.controller('AirtimeController', ['$scope', '$filter',
+  function ($scope, $filter) {
+    $scope.model = {
+      sf: 12,
+      pl: 51,
+      bw: 125,
+      n_preamble: 8,
+      header: true,
+      cr: 1,
+      crc: true
+    };
+
+    $scope.preambleOptions = [
+      {value: 8, name: '8 symbols'},
+      {value: 10, name: '10 symbols'}
+    ];
+
+    $scope.$watch('model.sf', calc);
+    $scope.$watch('model.bw', calc);
+    $scope.$watch('model.cr', calc);
+    $scope.$watch('model.pl', calc);
+    $scope.$watch('model.n_preamble', calc);
+    $scope.$watch('model.header', calc);
+    $scope.$watch('model.crc', calc);
+
+    function calc() {
+      if ($scope.model.sf > 12) {
+        $scope.model.sf = 12;
+      } else if ($scope.model.sf < 7) {
+        $scope.model.sf = 7;
+      }
+      if ($scope.model.cr > 4) {
+        $scope.model.cr = 4;
+      } else if ($scope.model.cr < 1) {
+        $scope.model.cr = 1;
+      }
+
+      $scope.IH = (!$scope.model.header);
+      $scope.DE = ($scope.model.bw === 125 && $scope.model.sf >= 11);
+
+      $scope.T_sym = (Math.pow(2, $scope.model.sf) / ($scope.model.bw * 1000)) * 1000; //ms
+      $scope.T_preamble = ($scope.model.n_preamble + 4.25) * $scope.T_sym; //ms
+
+      $scope.beta = Math.ceil((8 * $scope.model.pl - 4 * $scope.model.sf + 28 + 16 * $scope.model.crc - 20 * $scope.IH) / (4 * ($scope.model.sf - 2 * $scope.DE)));
+      $scope.n_payload = 8 + Math.max($scope.beta * ($scope.model.cr + 4), 0);
+
+      $scope.T_air = $scope.T_preamble + ($scope.n_payload * $scope.T_sym);
+
+      var dc = new Date(Math.round(($scope.T_air / 600) * 60) * 1000);
+      $scope.duty_cycle = $filter('date')(dc, "mm:ss");
+
+    }
+  }
+]);
