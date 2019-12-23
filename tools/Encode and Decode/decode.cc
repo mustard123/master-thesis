@@ -1600,7 +1600,7 @@ int main(int argc, char **argv)
     //d_bw = 125000; via program args
     d_implicit = false;
     // d_reduced_rate = reduced_rate;
-    d_phdr.cr = 4;
+    d_phdr.cr = 4; // header cr is always 4, phy cr is set in header which gets decoded first to get the value
     d_phdr.has_mac_crc = 1;
     //d_samples_per_second = 1000000; via program args
     d_payload_symbols = 0;
@@ -1638,7 +1638,6 @@ int main(int argc, char **argv)
     std::cout << "Bins per symbol: \t" << d_number_of_bins << std::endl;
     std::cout << "Samples per symbol: \t" << d_samples_per_symbol << std::endl;
     std::cout << "Decimation: \t\t" << d_decim_factor << std::endl;
-    std::cout << "CR: \t\t" << (int)d_phdr.cr << std::endl;
     std::cout << "Symbols per second: \t\t" << d_symbols_per_second << std::endl;
     std::cout << "Bits per second: \t\t" << d_bits_per_second << std::endl;
     if (!d_enable_fine_sync)
@@ -1698,7 +1697,7 @@ int main(int argc, char **argv)
             fin.read(buffer, BUFFER_SIZE);
             input = (gr_complex *)buffer;
             outfile << "word,sample" << std::endl;
-            while (read_samples < total_samples - 2 * d_samples_per_symbol) // preamble detection looks two symbols ahead, prevent overflow in detect mode
+            while (read_samples < total_samples - 2 * d_samples_per_symbol) // remove (-2 * d_samples_per_symbol) if decoding signal generate with encoder for getting all the symbols in the csv file. The preamble detection looks two symbols ahead, prevent overflow in detect mode if signal is never detected.
             {
                 work(input);
             }

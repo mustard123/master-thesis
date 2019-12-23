@@ -1,0 +1,89 @@
+\documentclass[12pt,a4paper,english,twoside]{book}
+\usepackage[german,main=english]{babel} % I added main= before english,else  compiler complaint 
+\usepackage[T1]{fontenc} 
+\usepackage[utf8]{inputenc} % I changed from latin1 to utf8, else umlaute not displayed correctly
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{epsfig}
+\usepackage{moreverb}
+\usepackage{rotating}
+\usepackage{enumerate}
+\usepackage{graphics, graphicx,wrapfig}
+\usepackage{fancybox}
+\usepackage{picinpar,varioref,floatflt}
+\usepackage{ae}
+\usepackage{longtable}
+\usepackage{textcomp}
+\usepackage{float}
+\usepackage{url}
+\usepackage{unizhdt}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Define the language of the diploma thesis
+\selectlanguage{english}
+%\selectlanguage{german}
+
+\pagestyle{headings}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Define the author printed on the cover page
+\author{Silas Weber}
+% Define the city and country of the author
+\authorcity{Zurich, Switzerland}
+% Define the student ID (Matrikelnummer)
+\studentid{14-704-845}
+% Define the title with optional subtitle
+\title{Design and Prototypical Implementation of ...}
+% Define the supervisors
+\supervisors{Eryk Schiller}
+% Define the submission date
+\submissiondate{February 3, 2019}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Make the title page
+\maketitle
+
+% Make the imprint on the back of the cover page
+\makeimprint
+
+\pagenumbering{roman}
+
+% Include the files of the diploma thesis
+%\cleardoublepage
+\input{abstract.tex}
+%\cleardoublepage
+\input{acknowledgments.tex}
+
+\tableofcontents
+
+\cleardoublepage
+\pagenumbering{arabic}
+\input{introduction/introduction.tex}
+\input{relatedwork/relatedwork.tex}
+\input{main/main.tex}
+%\input{.tex}
+%\input{.tex}
+\input{futurework/futurework.tex}
+\input{summary/summary.tex}
+
+\input{bibliography.tex}
+
+\input{abbreviations.tex}
+\input{glossary.tex}
+
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+
+\input{appendix.tex}
+
+\end{document}

@@ -196,6 +196,25 @@ uint16_t d_num_preamble_symbols;
 double d_chirp_phi0;
 std::vector<gr_complex> d_sample_buffer;
 
+/*
+return number of symbols for header and payload with crc
+param pl: payload_length in bytes paylaod withou header or crc
+param sf: spreading factor 7<=x<=12
+param cr: coding rate, from 1 to 4, ratio = 4 / (4+CR)
+param implicit_header: set false, our tespackets have explicit header
+param DE: Data rate optimization Enabled, false four our testpackets
+*/
+uint32_t calc_num_of_symbols(uint32_t pl, uint8_t sf, uint8_t cr ,bool implicit_header, bool DE) {
+
+    double dividend = 8.0*pl-4*sf + 28+16 -20 * implicit_header;
+    double divisor = 4.0*(sf - 2.0* DE);
+
+
+    uint32_t n = (uint32_t) 8+std::max(std::ceil( dividend / divisor) * (cr + 4.0), 0.0);
+    return n;
+
+}
+
 
 
 bool parse_packet_conf(loraconf_t &conf, uint8_t *packet, uint32_t packet_len)
@@ -318,14 +337,14 @@ inline void whiten(uint8_t* input, const uint8_t* sequence, uint32_t length) {
         }
 
 void transmit_packet(loraconf_t& conf, uint8_t* packet, bool up = true) { // TODO: clean up
-        uint32_t packet_length = conf.phy.length + sizeof(loraphy_header_t); //
-        uint32_t num_bytes = packet_length*2;
+        //header plus payload plus crc
+        uint32_t packet_length = sizeof(loratap_header_t) + conf.phy.length + 2;
+        uint32_t num_symbols = calc_num_of_symbols(conf.phy.length, conf.tap.channel.sf, conf.phy.cr, false, false);
 
-        // uint32_t num_symbols = 8.0 * sizeof(loraphy_header_t) / ((4.0/8)) + 
-
-
+        // each symbols holds sf bits
+        uint32_t num_bytes = (uint32_t) std::ceil((num_symbols*conf.tap.channel.sf) / 8.0);
+        
         uint8_t encoded[num_bytes];
-        uint32_t num_symbols = num_bytes * ((4.0+conf.phy.cr) / conf.tap.channel.sf) + 0.5;
         uint32_t encoded_offset = 0;
         uint32_t packet_offset = 0;
 
@@ -416,7 +435,7 @@ int main()
 
 
     // Temporary         ve  pa      le              fq  bw  sf  pr  mr  cr  sn  sy  H1  H1  H1
-    char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x17\x91\xa0\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\xb8\x73";
+    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x17\x91\xa0\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\xb8\x73";
     
     //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2";
     // Header + Goodbye! + CRC,  (08 30 00 47 6f 6f 64 62 79 65 21 3f e4) i.e what the lora_receiver has decoded from the arduino raw uplink
@@ -425,7 +444,7 @@ int main()
 
    // char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x41\x43\x4b\x03\x56\xeb"; // ACK
 
-    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2"; // 123
+    char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2"; // 123
 
 
     

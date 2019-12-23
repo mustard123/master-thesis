@@ -67,7 +67,7 @@
             "program": "${workspaceFolder}/decoder",
             "args": [
                 "-f",
-                "./a.raw",
+                "./channelized.raw",
                 "-s",
                 "7"
             ],

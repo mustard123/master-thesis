@@ -252,6 +252,11 @@ git clone https://github.com/rpp0/gr-lora.git && cd gr-lora && git checkout b1d3
 && cmake .. && make && sudo make install && sudo ldconfig
 ```
 
+With pip for python2 install the zmq package: 
+```
+pip install pyzmq==18.1.0
+```
+
 Then open the *zero_mq_split_a.grc* and the *zero_mq_split_b.grc* file in the docker/RRH directory resp. in the docker/BBU/LoRa_Decoder directory. Or run the *zero_mq_split_a.py* resp. the  *zero_mq_split_b.py* script in those directories with your shell.
 Also run the *lora_socket_server.py* sript inside docker/BBU/LoRa_Responder with your shell.
 
