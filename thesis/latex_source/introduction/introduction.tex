@@ -1,9 +1,74 @@
-\chapter{Introduction}
+\chapter{Introduction and Motivation}
+Scalability and improvement of Internet of Things (IoT) devices and protocols
+are important research questions.
+Low Power Wide Area Networks (LPWANs) technology offers long-range communication
+with low poser requirements. Battery powered LPWAN devices can run for years.
+For instance, a node sending 100B once a day lasts for 17 years \cite{morin}.
+LoRa (short for Long Range) is a spread spectrum modulation
+technique, a wireless radio frequency technology for long range and low power platforms
+and has become the de facto technology for IoT networks worldwide \cite{what_is_lora}.
+LoRaWAN is the open standard backed by the LoRa Alliance. It is a communication protocol and
+Medium Access Control (MAC) protocol built on the physical LoRa layer.
+LoRaWAN is designed from the bottom up to optimize LPWANs
+for battery lifetime, capacity, range, and cost \cite{what_is_lora_wan}.
+There are 142 countries with LoRaWAN deployments, 121 network operators,
+and 76 LoRa Alliance member operators. Swisscom, Amazon, IBM, CISCO are merely a few of the 
+notables LoRa Alliance members \cite{lora_alliance}.
+TTN (The Things Network), also a LoRa Alliance member, provides a worldwide LoRaWAN network 
+for and from the community. Anyone with a LoRa gateway can register their gateway on TTN, thereby
+extending the networks reach. At the time of writing, TTN has 95'208 members, 9'786 gateways, and is
+present in 147 countries \cite{ttn}. As LoRaWAN operates in the unlicensed ISM ( Industrial, Scientific and Medical)
+radio bands. Therefore no government license is required to operate LoRa devices and gateways. 
+This allows hobbyist, enthusiasts, and developers to quickly get started and open networks such as TTN
+to grow rapidly.
+\\
+In a typical LoRaWAN use case, an IoT device such as a sensor sends data out over the air. Then a LoRa gateway picks
+the signal up, decodes it, and forwards it over the Internet to the network server which then can send the packet to 
+the application server. If needed, a response message can scheduled on the network server who then chooses the best gateway
+to send the response back to the IoT device.
+LoRa gateways carry the full implementation of the LoRa PHY (the physical layer), the LoRaWAN protocol, as well as 
+the packet forwarder. This architecture of the LoRa gateway can be separated and technological stack on the gateway can 
+be reduced by running the signal processing functions not on the gateway itself but in a cloud environment. Such a Cloud Radio
+Access Network (CRAN) has been previously shown to be beneficial in the 3rd Generation Partnership
+Project (3GPP) Long Term Evolution (LTE) \cite{Sousa2016}. The gateway then is left with only minimal functionality it has to support.
+As the decoding does not take place on the gateway itself, it does not need do have any LoRa specific hardware e.g the SX1276 transceiver chip
+found on LoRa devices and gateways. Rather, the gateway is equipped with an antenna, an amplifier as well as digital to analog (DAC) and 
+analog to digital (ADC) converters. On the upstream, the gateway receives LoRa radio signals which it converts into Inphase and Quadrature 
+(I/Q) sample stream with the ADC and simply forwards them to the cloud signal processing unit via the internet. 
+On the downstream the cloud unit streams a LoRa signal as I/Q samples to the gateway which converts it with the DAC to an analog signal and 
+propagates it out over the air. Signals are encoded and decoded on the cloud unit, the Radio Cloud Center (RCC). There are many advantages in such 
+a setup but they come at a cost. First advantage is that the gateway can be kept at a much simpler design resulting in significant manufacturing
+cost reduction. Also, modifications to the LoRa PHY or LoRaWAN are easier to introduce as the physical layer is implemented in software. 
+Gateways that are once deployed do not need to be physically replaced in case of an upgrade as they are agnostic to the underlying protocol and
+just convert and transceive (transmit and receive) I/Q samples. Updates to the protocol can be realized with just updating the software implementation. 
+A Low Power Network (LPN) provider saves cost by not having to drive out to the deployed gateways throughout the country to upgrade their versions.
+The disadvantage is the high throughput of the I/Q samples stream between the gateway and the RCC. Streaming the I/Q samples between gateway and RCC 
+has significantly higher bandwidth requirements than just demodulating the signal on the gateway and forwarding the decoded LoRa packet as it is done 
+in the non cloudified setup. Cloudifying the LoRa gateways also brings the advantages of setting the base for Software Defined Networking (SDN) and 
+Network Function Virutalization (NFV) by centralizing the resources in the RCC that were before distributed on the individual gateways.
+Goal of this work is setting up a CRAN architecture for LoRa by simplifying the gateways as described above and moving the signal processing out of the 
+gateway into a cloud ready environment i.e., Docker.
 
-\section{Motivation}
+
+
 
 
 \section{Description of Work}
+This work first gives a general introduction to LoRa, LoRaWAN and its applications, then dives 
+into more details regarding the LoRa physical layer. Then it gives an overview over existing 
+software implementations of the LoRa PHY. There are two main contributions. First, this work 
+implements a CRAN for LoRa, gives an architectural overview as well as the implementation details.
+It evaluates the architectural and network related requirements. We developed a simple protocol in raw LoRa,
+meaning not compliant with the LoRaWAN standard, where a hardware IoT device has a queue of packets to transmit then, depending on 
+wether it requires an acknowledgment, waits for a few seconds for a response or just transmit the next packet in the queue in an interval.
+If the packet required to be acknowledged but no acknowledgment is received, the same packet will put as first item in the queue.
+We use this protocol to analyze our CRAN for LoRa architecture.
+\\
+Second, as the LoRa PHY is closed source, there is no official documentation on how the LoRa PHY is implemented.
+The existing implementations are all reverse engineering attempts with various degree of success. 
+They all focused first on decoding LoRa signals transmitted by a real LoRa hardware. For the CRAN to work, not only is it 
+necessary to decode signals but also the encoding of downstream LoRa gateway signals is required. In this work we developed a tool 
+allows the generating of downstream signals in software.
 
 
 \section{Thesis Outline}
