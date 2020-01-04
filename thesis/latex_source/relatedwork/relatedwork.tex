@@ -1,11 +1,183 @@
-\chapter{Related Work}
+\chapter{LoRa and LoRaWAN}
+LoRa is a modulation technique derived from chirp
+spread spectrum technology\cite{what_is_lora}. 
+Originally developed by Cycleo, a french company, LoRa has been acquired by Semtech~\cite{limits_lora}.
+LoRa signals spread over multiple frequencies using the whole available bandwidth.
+This makes the signal more resilient against noise on a disrupting frequency. As LoRa
+signal are sent over the unlicensed ISM bands, this resilience is an important factor.
+While LoRa is the modulation technique on the physical layer, LoRaWAN on the other hand 
+is an open communication protocol backed by the Lora Alliance. LoRaWAN specifies packet format,
+duty cycles, key exchanges and many more things needed for an efficient and cooperative LoRa network.
+A LoRa network is and LPWAN where battery powered devices can stay operating up to 17 years, making LoRa
+a popular choice for IoT devices as shown in the example given in the introduction in chapter~\ref{thesis:introduction}. 
+The TTN network for example is used for cattle tracking, smart irrigation as well as smart parking applications~\cite{ttn}.
 
-\section{Lora}
-history, usage iot, smart cities, long range, semtech
-the things network keys \& gateways
-\subsection{LoRa signal}
-chirps, spreading factors, modulation
-\subsection{LoRa in SDRs}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/LoRa_context.png}
+    \caption{LoRa vs other wireless technology\cite{lora_context}}
+    \label{fig:lora_context}
+\end{figure}
+
+Figure~\ref{fig:lora_context} shows LoRa compared two other wireless technologies, Wi-Fi and cellular. Both Wi-Fi and cellular
+are high in bandwidth with cellular having a longer range than Wi-Fi. They both have a much higher power consumption compared to LoRa.
+LoRa has lower bandwidth but a high range. In a experiment during a TTN conference LoRa signals from a low orbit satellite were received~\cite{loa_satellite}.
+On the other hand, as LoRa is designed for long range and low power, only few bytes are transmitted per day while Wi-Fi and cellular are capable of video streaming.
+In urban areas LoRa has a range of 2-5 km and 15 km in suburban areas~\cite{limits_lora}.\\
+LoRaWAN is not the same all around the world. There are regional parameters that come into play, one is for example the frequency band.
+In Europe LoRaWAN operates on the in the 863-870MHz and 433MHz ISM band and in North America the 902-928MHz ISM band. Also channel bandwidth and maximum transmission 
+settings are regulated by the government and thus are not the same for all regions~\cite{lora_wan_regional}.
+
+
+\section{LoRaWAN architecture}
+A LoRaWAN network architecture is a star-of-stars topology. The gateways relay the messages between the end-devices and a central network server.
+Gateways are connected to the network server via IP connections, converting the RF packets to IP packets and vice versa~\cite{about_lora_wan}.
+Network nodes are not associated with a specific gateway, rather messages sent by a node can be received by multiple gateways. Each gateway will then 
+forward the the message to the network server who does the complex things such as filtering redundant packages, security checks, forwarding the messages
+to the right application server etc.~\cite{what_is_lora_wan}.
+As network communication is bidirectional, the network server is also responsible for scheduling responses to the end-nodes. There are different classes of 
+end-nodes which will be described in the next section.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/lorawan_network.png}
+    \caption{LoRaWAN network architecture~\cite{what_is_lora_wan}}
+    \label{fig:lorawan_network}
+\end{figure}
+
+As depicted in Figure~\ref{fig:lorawan_network}, the packets sent by end-devices (on the far left) such as alarms, tracking devices and monitoring devices,
+can be received by multiple gateways. As the end-nodes are not linked to a particular gateway, the can be moved freely which is an important requirement for 
+assets tracking.\\
+The Figure also shows how security is built into LoRaWAN. The payload is end-to-end encrypted from the end-nodes to the applications server.
+A unique 128-bit network session key is shared between  the end-device and the network server and 
+another 128-bit application session key is shared end-to-end at the application level~\cite{about_lora_wan}.
+With those measures LoRaWAN prevents eavesdropping. Spoofing is prevented by a MIC (Message Integrity Code)
+in the MAC payload, and replay attacks are prevent by utilizing frame counters~\cite{lora_security}.
+
+
+\section{End-node Classes}
+There are three classes of end-devices. The following description is adapted from the LoRa Alliance guide~\cite{about_lora_wan,what_is_lora}:
+\begin{itemize}
+    \item Class A, Lowest power, bi-directional end-devices:\\
+    \\
+    This is the default class, supported by all LoRaWAN devices.
+    It is always the end-node that initiates the communication. After an uplink
+    two downlink windows open for the end-device to receive a response, enabling bi-directional communication.
+    Either the first is used, or the second, but not both receive windows.
+    The end-device can rest in low-power sleep mode, wake up when it needs to send a packet, receive a response
+    in the downlink window, then go back to seep. This is an ALOHA-type of protocol. Class A devices have the lowest 
+    power consumption. Downlinks from the server have to wait for an uplink from end-device and cannot be initiated directly.
+    \item Class B, Bi-directional end-devices with deterministic downlink latency:\\
+    \\ 
+    Additionally to Class A receive windows, a Class B device opens extra receive windows at scheduled times.
+    This is achieved by time-synchronized beacons from the gateway to the end-device to notify the end-device
+    to open a receive window.
+
+    \item Class C, Lowest latency, bi-directional end-devices:\\
+    \\
+    Devices of this class have always open receive windows, except for when they are themselves transmitting.
+    A downlink transmission can be initiated by the network server at any time (assuming the device is not currently transmitting)
+    resulting in no latency. Class C devices however use the most energy. They are more suitable for plugged in devices rather than
+    battery powered devices.
+
+\end{itemize}
+
+\newpage
+
+
+\section{LoRa signal (uplink)}
+\subsection{Chirps}
+A LoRa signal is a series of so called chirps as LoRa is derived from the Chirp Spread Spectrum modulation (CSS) technique. 
+There are up-chirps and down-chirps. In CSS chirps are deliberately spread across the available bandwidth. Up-chirps go from low frequency 
+to high frequency and down-chirps go from high frequency to low frequency. In Europe the LoRaWAN bandwidth for is 125 kHz. Assuming a center
+frequency of 868.5 MHz, which is in the european ISM band, a full up-chirp, so called sweep, would go from 868.4375 MHz to 868.5625 MHz.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/chirp_mobilefish.png}
+    \caption{Up- and down chirps~\cite{lora_chirp_mobilefish}}
+    \label{fig:chirp_mobilefish}
+\end{figure}
+
+Figure \ref{fig:chirp_mobilefish} shows the linear frequency increase resp. decrease over time over the full bandwidth
+for up-chirps and down-chirps. Data is encoded by frequency jumps in the chirps. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/signal_Goodbye!_SF9_CR4_5.png}
+    \caption{Own recording of uplink transmission by arduino equipped with a LoRa shield}
+    \label{fig:Goodbye}
+\end{figure}
+
+The LoRa signal shown in~\ref{fig:Goodbye} carries the message  "Goodbye !". This message was sent 
+with a spreading factor (SF) of 9 and coding rate of 4/5. The terms spreading factor and coding rate 
+will be discussed later on.\\
+As one can see, a typical LoRa signal start with a so called preamble, which are the 10 up-chirps at 
+the beginning. Those are followed by two down-chirps, which signify the end of the preamble and the start 
+of the actual payload. In this payload is a header, the actual encoded message followed by a Cyclic Redundancy Check (CRC).
+The CRC is used for error correction.
+\subsection{Symbol and Spreading Factor}
+A LoRa signal holds various symbols. A symbol encodes one or more bits of data.
+The spreading factor determines the number of encoded bits in a symbol.
+In the shown recording one symbol holds 9 bits of data as the spreading factor of that signal was set to 9.
+It follows that a symbol has $2^{SF}$ values. Those values range from 0 to 511 in case of SF 9. A sweep signal of SF 9
+thus has 512 chips (no to be confused with chirps)~\cite{lora_symbol_mobilefish}.
+The chips go linearly from low to high and then wrap around once the maximum frequency is reached.
+\\
+In Figure~\ref{fig:fict_symbols} a fictional symbol with SF 7 is shown. This particular 
+arrangement of chips highlighted in orange would denote the symbol "1011111". Those 7 bits correspond 
+to the decimal value 95.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/chips_and_symbols.png}
+    \caption{Chips and symbols value~\cite{lora_symbol_mobilefish}}
+    \label{fig:fict_symbols}
+\end{figure}
+
+In Figure \ref{fig:Goodbye_decoded}, a real world example is shown. The same LoRa signal as in Figure~\ref{fig:Goodbye} with SF 9 with the message "Goodbye !"
+run through modified version of the LoRa decoder by Robyns et al.~\cite{robyns} and then through a python script where we match the samples to the symbols and their 
+values. The last symbols encodes the hex value 142 which corresponds to these 9 bits "101000010". In a SF 9 signal each symbol encodes 9 bits.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/Goodbye_decoded.png}
+    \caption{Running the signal through our toolchain, matching symbols with samples}
+    \label{fig:Goodbye_decoded}
+\end{figure}
+
+\newpage
+
+\subsection{Coding Rate}
+LoRa signals are encoded with a coding rate (CR). The CR denotes the proportion of how many bits carry actual information. The bits that do not carry information are used 
+for Forward Error Correction. The formula for coding rate is $CR=4/(4 + CR)$ where CR $\in \{1,2,3,4\}$. A CR of 1 is thus the proportion of 4/5 of actual information over 
+bits used for error correction\cite{SX_design_guide,coding_rate_mobilefish}.
+With FEC, corrupted bits e.g. due to interference can be corrected. With CR of 4, corresponds to $4/8 = 1/2$, half the transmitted bits carry information, the other half is for FEC.
+The higher the CR (from 1-4) the more bits can get corrupted and corrected by FEC.
+On the other hand, the higher the CR the more bits need to be transmitted which drains the battery more.
+
+
+\subsection{Spreading Factor \& Time on Air}
+The longer the packet, the longer the transmission time. LoRa packets can be shortened
+by omitting the optional CRC field or sending packets with implicit header mode where the
+no header is sent and the settings that would have been specified in the header have to be 
+predefined manually on the end device.\\
+Assuming constant packet size and same bandwidth, varying the spreading factor increases resp. decreases the time on air.
+The higher the SF, the longer the time on air. Higher SF means longer range. The spreading factor goes from 7 to 12. SF 7 has 
+the shortest range, SF 12 the longest. The spreading factor essentially sets the duration of a chirp, a full sweep~\cite{exploratory_eng}.
+\\
+The symbol time is defined in the LoRa Design guide by $T_{sym} = \frac{2^{SF}}{BW}$~\cite{SX_design_guide}.
+It follows as stated above, that the higher the SF the longer the symbol duration. Also, the higher the bandwidth (BW) the shorter
+the symbol duration. In Europe the BW is 125~kHz, while in North America a BW of 500~kHz is allowed.
+It also follows that with an increase in SF by 1 the symbol duration is doubled. The bit rate $R_{b}$  is then defined by 
+$R_{b} = SF*\frac{[\frac{4}{4 * CR}]}{[\frac{2^{SF}}{BW}]}$ with CR being the coding rate for the error correction scheme~\cite{lora_modulation_basics}.
+It follows from the formula that the higher the coding rate the lower the bit rate as with a higher CR more redundancy is added 
+for the error correction scheme. Highest data rate for $BW=125~kHz$ and $CR=1$ is achieved 
+with SF 7 resulting in a data rate of 5.5 kbits/s and the lowest data rate is achieved with SF 12 resulting in a data rate 0.29 kbits/s.
+\\
+The spreading factors are orthogonal to each other, meaning signals on different spreading factors do not interfere with each other. This is 
+Code Division Multiple Access (CDMA) where a shared medium i.e. the bandwidth is optimized for multiple access.
+
+
+\chapter{LoRa in SDRs}
 josh blum
 matt knight
 pieter robyns
