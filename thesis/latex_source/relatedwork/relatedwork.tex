@@ -157,7 +157,7 @@ On the other hand, the higher the CR the more bits need to be transmitted which 
 
 \subsection{Spreading Factor \& Time on Air}
 The longer the packet, the longer the transmission time. LoRa packets can be shortened
-by omitting the optional CRC field or sending packets with implicit header mode where the
+by sending packets with implicit header mode where the
 no header is sent and the settings that would have been specified in the header have to be 
 predefined manually on the end device.\\
 Assuming constant packet size and same bandwidth, varying the spreading factor increases resp. decreases the time on air.
@@ -175,13 +175,160 @@ with SF 7 resulting in a data rate of 5.5 kbits/s and the lowest data rate is ac
 \\
 The spreading factors are orthogonal to each other, meaning signals on different spreading factors do not interfere with each other. This is 
 Code Division Multiple Access (CDMA) where a shared medium i.e. the bandwidth is optimized for multiple access.
+\\
+To optimize network capacity LoRaWAN employs a method called Adaptive Data Rate (ADR). With ADR the network server signals 
+the end-device which spreading factor to use according to some measurements including the signal to noise ratio. Assuming there are multiple devices near a gateway 
+that transmit with SF 12. This occupies the bandwidth for device that are farther away and actually need SF 12.
+The network server detects that the nearby devices do not need a spreading factor of 12 and signal them to use 
+a lower SF such as SF 7 or SF 8. The ADR setting has to be enabled on the end-devices and can be disabled.
+
+\subsection{Packet structure}
+The base form of a LoRa packet starts with the preamble, followed by the optional header with a header CRC, followed by the payload and finally the 
+payload CRC. The number of payload symbols is calculated by the following formula~\cite{SX_design_guide}:\\ \\
+$payloadSymbNb = 8 + max{(ceil(\frac{8PL-4SF+28+16-20H}{4(SF-2DE)})*(CR+4),0)}$ 
+\\ \\
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/packet_struct.png}
+    \caption{LoRa packet structure~\cite{SX_design_guide}}
+    \label{fig:packet_struct}
+\end{figure}
+
+With: 
+\begin{enumerate}
+    \item PL being the number of payload bytes
+    \item SF being the spreading factor
+    \item H = 0 if header is enabled and H = 1 if no header
+    \item DE = 0 if low data rate optimization is enabled and DE = 0 if disabled
+    \item CR being the coding rate
+    
+\end{enumerate}
+
+This website \url{https://www.loratools.nl/#/airtime} has an online tool for calculation the airtime.
+
+As Figure~\ref{fig:packet_struct} shows, the header is always encoded with the highest coding rate, $CR=4$.
+This is because the header contains crucial information such as the packet length.
+
+Figure \ref{fig:uplink_struct} and Figure \ref{fig:downlink_struct} show the structure of an uplink resp. a 
+downlink packet. There is no CRC in downlink packets. PHDR stands for PHY header.
+Those are "raw" LoRa packets. LoRaWAN packets have additional fields such as MAC header (MHDR) and 
+frame header (FHDR). Those are all in PHY payload of the "raw LoRa" packet as Figure~\ref{fig:lora_wan_struct} 
+shows.   
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/uplink_struct.png}
+    \caption{LoRa uplink packet structure~\cite{lora_wan_spec}}
+    \label{fig:uplink_struct}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/downlink_struct.png}
+    \caption{LoRa downlink packet structure~\cite{lora_wan_spec}}
+    \label{fig:downlink_struct}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/lorawan_struct.png}
+    \caption{LoRaWAN packet~\cite{lora_wan_spec}}
+    \label{fig:lora_wan_struct}
+\end{figure}
 
 
 \chapter{LoRa in SDRs}
-josh blum
-matt knight
-pieter robyns
+Software-defined radios (SDR) implement components that are usually implemented in hardware.
+The most popular signal processing frameworks is GNU Radio
+For LoRa we were looking for an existing implementation that demodulates, and also modulates LoRa signals.
 
-\section{C-RAN in LTE}
+\section{Existing implementations}
+There are three existing implmentations we looked at:
+\begin{itemize}
+    \item Josh Blum's LoRa Mod -and Demodulator for LoRa in the Pothos framework \url{https://myriadrf.org/news/lora-modem-limesdr/}
+    \item Matt Knight's GNU Radio Module \url{https://github.com/BastilleResearch/gr-lora}
+    \item Robyns et al. LoRa Module for GNU Radio \url{https://github.com/rpp0/gr-lora}
+\end{itemize}
+
+We tried Blum's implementation in the Pothos  first. The Pothos projects is an open source data-flow framework
+supporting SoapySDR, a general framework for supporting SDR devices~\cite{pothos}.
+Unfortunately the LoRa modem demo application did not work for at all. After spending a few unsuccessful days 
+trying to get to the issue we moved to Knight's application.
+
+Matt Knight held a great talk on reverse engineering LoRa at the GNU Radio conference 2016 \url{https://www.youtube.com/watch?v=-YNMRZC6v1s}.
+GNU Radio, as Pothos, is a framework for signal processing.\\
+From the GNU Radio website:
+\begin{displayquote}
+    GNU Radio is a free \& open-source software development toolkit that provides signal processing
+    blocks to implement software radios. It can be used with readily-available low-cost external
+    RF hardware to create software-defined radios, or without hardware in a simulation-like environment.
+    It is widely used in research, industry, academia, government, and hobbyist environments to support both wireless
+    communications research and real-world radio systems.~\cite{gnuradio}
+\end{displayquote}
+
+GNU Radio already comes with a wide set of blocks. Extensions are called Out Of Tree modules (OOT) as they are not in the 
+standard tree of blocks. Knight's implementation did not work well for us. If we got an output from the decoder, it was not 
+what was expected. A reason could be that in his examples the signal source block is an USRP SDR while we had a LimeSDR mini 
+at our disposal. Simply switching the source blocks probably is not enough. We did not investigate the compatability between LimeSDR mini
+and and USRP further but moved on to the final implementation.
+His blocks are in modular fashion. The demodulator and decoder are separate blocks. Channelization and fine tuning must be done 
+explicitly before passing the stream to the demodulator block.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/matt_gnu_example.png}
+    \caption{Knight's GNU Radio gr-lora OOT RX example~\cite{knight_implementation}}
+    \label{fig:knight_gnu}
+\end{figure}
+
+Figure~\ref{fig:knight_gnu} shows the typical flow of a GNU Radio flowgraph where data is passed 
+from block to block as a stream (blue connection ports) or as message blocks (grey connection ports).
+\\
+Robyns' implementation is also an OOT module for GNU Radio. It has a elaborate 
+installation and usage guide. A docker environment is also provided for testing the 
+decoding of a LoRa signal, which is a big plus. Unlike Knight's implementation, this module
+has demodulation, decoding and channelization all in one single block as shown in Figure~\ref{fig:robyns_gnu}. 
+The module has been tested with various SDR devices but not with the LimeSDR mini. Nevertheless it worked
+well for us and we based the CRAN implementation for LoRa on this module.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/robyns_gnu.png}
+    \caption{Single LoRa Receiver block (top right)~\cite{robyns_implementation}}
+    \label{fig:robyns_gnu}
+\end{figure}
+
+
+\section{LoRa decoding}
+The difficulty with reverse engineering LoRa is that its proprietary and
+there is no official documentation on the PHY. To reverse engineer, information hints
+on the PHY layer have to be taken from various official LoRaWAN documents, from patents, and the 
+rest is guesswork. To make it more difficulty, some of the documentation is a lie as the PHY is not implement 
+in the way it is described. 
+complete lie, see Knight~\cite{knight_youtube}. 
+The data is encoded before it is sent over the air to make it more resistant against interference.
+Thus after demodulating the signal with a Fourier Transform, the data has to be decoded to make it usable.
+Semtech's european patent hints at the following four steps:
+\begin{enumerate}
+    \item Symbol gray indexing. This adds error tolerance
+    \item Data whitening. This induces randomness.
+    \item Interleaving. This scrambles the bits within a frame
+    \item Forward Error Correction. This adds correction parity bits.
+    
+\end{enumerate}
+Those are 4 distinct operation which have to be reverse engineered~\cite{knight_youtube}.\\
+Robyns et al. identified and implemented the following seven steps in their receiver to 
+receive and decode a LoRa signal: detection, synchronization, demodulation, deinterleaving, dewhitening,
+decoding, and packet construction~\cite{robyns_implementation}. They also provide a detailed description of the 
+packet structure, especially the header. They deduce that because the minimum SF is SF 7, and the header is always 
+transmitted mit CR = 4, it must fit in an interleaving matrix of a certain size which results int the header heaving a size of 
+40 bits. The header contains important data as the payload length, thus it makes sense that the header is always sent with the highest
+coding rate.
+At the time of Knight's talk, he did not decode the header. Robyns implementation is quite complete except for CRC checks of the payload and header
+as well as decoding multiple channels simultaneously. 
+
+
+\chapter{}{C-RAN in LTE}
 advantages
 graphics
