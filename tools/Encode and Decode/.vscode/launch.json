@@ -69,7 +69,7 @@
                 "-f",
                 "./channelized.raw",
                 "-s",
-                "7"
+                "9"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
