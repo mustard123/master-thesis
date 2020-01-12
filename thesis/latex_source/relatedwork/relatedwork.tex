@@ -350,17 +350,37 @@ The BBUs in each tower are connected via ethernet to the Mobile Switching Center
     \label{fig:DRAN}
 \end{figure}
 
-In a Cloud / Centralized RAN (CRAN) the BBU in each tower site are move into a centralized place, the BBU hotel, see Figure~\ref{fig:CRAN}.
+In a Cloud / Centralized RAN (C-RAN) the BBU in each tower site are move into a centralized place, the BBU hotel, see Figure~\ref{fig:CRAN}.
 This new architectural setup results in saving const in capital expenditures as well as operational expenditures. The many small routers in the cell towers
 can be replaced by one in the BBU hotel. Deployment, maintenance and scaling can be expedited as all the BBU are centralized.
 Also this enables the BBU for Network Function Virtualization (NFV) and the RAN for Software Defined Networking (SDN)~\cite{fujitsu}.
 
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{figures/CRAN.png}
-    \caption{Distributed cell towers each with a RRH and BBU~\cite{fujitsu}}
+    \caption{BBUs are centralized in the BBU hotel~\cite{fujitsu}}
     \label{fig:CRAN}
 \end{figure}
 
-\section{RAN as a service}
+\section{Virtual RAN}
+In virtual RAN the execution environment is abstracted i.e. virtualized.
+Radio functions applications operate on a virtualized environment and interact
+with physical resources directly or through hardware emulation.
+Such a cloud environment enables RAN as a service~\cite{Nikaein2015}.
+For C-RAN this means instead of having a separate standalone physical device
+for each BBU in the BBU hotel the BBUs now can run on a single physical server with each
+BBU in a virtualized environment. \\
+Nikaein et al. describe two main steps for realizing a C-RAN namely:
+\begin{itemize}
+    \item \textbf{Commoditization and Softwarization} which essentially is the implementation of network and RF function in software.
+    \item \textbf{Virtualization and Cloudification} which is the execution of network functions and management of physical resources by a cloud OS~\cite{Nikaein2015}.
+\end{itemize}
+
+Nikaein et al. found that containers e.g. docker proved to be more adequate in their RAN as a service experiment as the offer near bare metal performance
+and provide direct access to the RF hardware. Virtual machines in, particular KVM, also gave them good performance, but require low latency mechanism to access I/O resources.
+\\
+For the C-RAN for LoRa, described in chapter~\ref{chap:cran_for_lora}, docker is used for the virtualization layer.
+
+
+

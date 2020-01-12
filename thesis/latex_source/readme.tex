@@ -30,7 +30,7 @@ which transmits them back over the air to the arduino.
 \begin{itemize}
 \tightlist
 \item
-  The container run in privileged mode to easily access plugged in USB
+  The container run in priviledged mode to easily access plugged in USB
   devices
 \item
   The container run in network mode host (No NAT or Bridge has to be
@@ -144,99 +144,94 @@ on all interface on port 5051\strut
 \bottomrule
 \end{longtable}
 
-\subsection{BBU}\label{bbu}
+\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
 
+To pass the parameters you have to specify them in the
+docker-compose.yml
+
+Example:
+
+To pass a capture frequencey of 915M and a sample rate of 250k enter the
+params in the following way in the command field:
+
+\emph{docker-compose.yml}
+
+\begin{verbatim}
+version: '3'
+services:
+    rrh:
+        build: .
+        privileged: true
+        network_mode: host
+        volumes:
+                - /dev/bus/usb:/dev/bus/usb
+        command: ["--capture-freq", "915000000", "--samp_rate", "250000"]
+\end{verbatim}
+
+\begin{longtable}[]{@{}l@{}}
+\toprule
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+\#\# BBU\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
 The BBU has two components: * LoRa\_Decoder: receives a stream of IQ
 samples from the RRH, decodes the LoRa signal and sends the decoded
-message out on a UDP socket * LoRa\_Responder: receives the messages
-from that UDP socket and, depending on message content, streams response
-IQ samples to the RRH or does not give a response
-
-In the BBU directory run:
-
-\begin{verbatim}
-docker-compose up 
-\end{verbatim}
-
-This starts both components of the BBU
-
-\subsubsection{Params}\label{params}
-
-The LoRa\_Decoder has the following params:
-
-\begin{verbatim}
-Usage: zero_mq_split_b.py: [options]
-
-Options:
-  -h, --help            show this help message and exit
-  --bandwidth=BANDWIDTH
-                        Set bandwidth [default=125000]
-  --capture-freq=CAPTURE_FREQ
-                        Set capture_freq [default=868.5M]
-  --decoded-out-port=DECODED_OUT_PORT
-                        Set decoded_out_port [default=40868]
-  --samp-rate=SAMP_RATE
-                        Set samp_rate [default=1.0M]
-  --spreading-factor=SPREADING_FACTOR
-                        Set spreading_factor [default=12]
-  --zmq-address-iq-in=ZMQ_ADDRESS_IQ_IN
-                        Set zmq_address_iq_in [default=tcp://127.0.0.1:5051]
-\end{verbatim}
-
-\begin{longtable}[]{@{}ll@{}}
-\toprule
-\begin{minipage}[b]{0.18\columnwidth}\raggedright\strut
-Param\strut
-\end{minipage} & \begin{minipage}[b]{0.18\columnwidth}\raggedright\strut
-Explanation\strut
+message out on a UDP socket * LoRa\_Network\_Server: receives the
+messages from that UDP socket and, depending on message content, streams
+response IQ samples to the RRH or does not give a response\strut
 \end{minipage}\tabularnewline
-\midrule
-\endhead
-\begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-bandwith\strut
-\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-The bandwidth in Hz of the LoRa signal. Default is 125000.\strut
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+In the BBU directory run:\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-capture-freq\strut
-\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-The frequency in Hz of the LoRa signal. The RRH of course must also
-listen on this frequeny. Default is 868500000.\strut
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+\texttt{docker-compose\ up}\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-decoded-out-port\strut
-\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-On which port the decoded messages will be sent out. Localhost only. The
-LoRa\_Responder needs to be configured to listen on this port. Default
-is 40868.\strut
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+This starts both components of the BBU\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-samp-rate\strut
-\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-How many samples per second to expect from the RRH. Default is
-1000000\strut
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+\#\#\# Params\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-spreading-factor\strut
-\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-The spreading factor of the incoming LoRa signal. From {[}7-12{]}
-inclusive. Default is 12\strut
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+The LoRa\_Decoder has the following params:\strut
 \end{minipage}\tabularnewline
-\begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
---zmq-address-iq-in\strut
-\end{minipage} & \begin{minipage}[t]{0.18\columnwidth}\raggedright\strut
-ZMQ address to which the BBU subscribes to receive an IQ samples stream
-(from the RRH) to decode. Default value is tcp://127.0.0.1:5051 meaning
-the IQ samples are expected to come from localhost on port 5051.
-Normally RRH and BBU are on different devices but on the same
-network\strut
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+``` Usage: zero\_mq\_split\_b.py: {[}options{]}\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+Options: -h, --help show this help message and exit
+--bandwidth=BANDWIDTH Set bandwidth {[}default=125000{]}
+--capture-freq=CAPTURE\_FREQ Set capture\_freq {[}default=868.5M{]}
+--decoded-out-port=DECODED\_OUT\_PORT Set decoded\_out\_port
+{[}default=40868{]} --samp-rate=SAMP\_RATE Set samp\_rate
+{[}default=1.0M{]} --spreading-factor=SPREADING\_FACTOR Set
+spreading\_factor {[}default=12{]}
+--zmq-address-iq-in=ZMQ\_ADDRESS\_IQ\_IN Set zmq\_address\_iq\_in
+{[}default=tcp://127.0.0.1:5051{]}\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.04\columnwidth}\raggedright\strut
+``` \textbar{} Param \textbar{} Explanation \textbar{} \textbar{}
+------------- \textbar{} ------------- \textbar{} \textbar{} bandwith
+\textbar{} The bandwidth in Hz of the LoRa signal. Default is 125000.
+\textbar{} \textbar{} capture-freq \textbar{} The frequency in Hz of the
+LoRa signal. The RRH of course must also listen on this frequeny.
+Default is 868500000. \textbar{} \textbar{}decoded-out-port\textbar{}On
+which port the decoded messages will be sent out. Localhost only. The
+LoRa\_Network\_Server needs to be configured to listen on this port.
+Default is 40868.\textbar{} \textbar{}samp-rate\textbar{} How many
+samples per second to expect from the RRH. Default is 1000000\textbar{}
+\textbar{}spreading-factor\textbar{} The spreading factor of the
+incoming LoRa signal. From {[}7-12{]} inclusive. Default is 12
+\textbar{} \textbar{}--zmq-address-iq-in\textbar{}ZMQ address to which
+the BBU subscribes to receive an IQ samples stream (from the RRH) to
+decode. Default value is tcp://127.0.0.1:5051 meaning the IQ samples are
+expected to come from localhost on port 5051. Normally RRH and BBU are
+on different devices but on the same network\textbar{}\strut
 \end{minipage}\tabularnewline
 \bottomrule
 \end{longtable}
 
-\begin{center}\rule{0.5\linewidth}{\linethickness}\end{center}
-
-The LoRa\_Responder has the following params:
+The LoRa\_Network\_Server has the following params:
 
 \begin{verbatim}
 usage: lora_socket_server.py [-h] [-o OUT_PORT] [-i INPUT_PORT]
@@ -289,8 +284,8 @@ docker-compose.yml file.
 Example:
 
 To have the LoRa\_Decoder send the decoded messages out on port 30300
-and the Lora\_Responder to listen on port 30300 accordingly pass the
-arguments like below to the respective command field:
+and the Lora\_Network\_Server to listen on port 30300 accordingly pass
+the arguments like below to the respective command field:
 
 \emph{docker-compose.yml}
 
@@ -302,8 +297,8 @@ services:
                 network_mode: host
                 tty: true
                 command: ["--decoded-out-port", "30300"]
-        lora_responder:
-                build: ./LoRa_Responder
+        lora_network_server:
+                build: ./LoRa_Network_Server
                 network_mode: host
                 tty: true
                 command: ["--input-port", "30300"] 
@@ -420,8 +415,8 @@ Then open the \emph{zero\_mq\_split\_a.grc} and the
 the docker/BBU/LoRa\_Decoder directory. Or run the
 \emph{zero\_mq\_split\_a.py} resp. the \emph{zero\_mq\_split\_b.py}
 script in those directories with your shell. Also run the
-\emph{lora\_socket\_server.py} sript inside docker/BBU/LoRa\_Responder
-with your shell.
+\emph{lora\_socket\_server.py} sript inside
+docker/BBU/LoRa\_Network\_Server with your shell.
 
 \section{Tools}\label{tools}
 

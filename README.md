@@ -93,7 +93,7 @@ services:
 
 The BBU has two components: 
 * LoRa_Decoder: receives a stream of IQ samples from the RRH, decodes the LoRa signal and sends the decoded message out on a UDP socket
-* LoRa_Responder: receives the messages from that UDP socket and, depending on message content, streams response IQ samples to the RRH or does not give a response
+* LoRa_Network_Server: receives the messages from that UDP socket and, depending on message content, streams response IQ samples to the RRH or does not give a response
 
 In the BBU directory run:
 
@@ -130,14 +130,14 @@ Options:
 | -------------       | ------------- |
 | bandwith  | The bandwidth in Hz of the LoRa signal. Default is 125000.   |
 | capture-freq        | The frequency in Hz of the LoRa signal. The RRH of course must also listen on this frequeny. Default is 868500000. |
-|decoded-out-port|On which port the decoded messages will be sent out. Localhost only. The LoRa_Responder needs to be configured to listen on this port. Default is 40868.|
+|decoded-out-port|On which port the decoded messages will be sent out. Localhost only. The LoRa_Network_Server needs to be configured to listen on this port. Default is 40868.|
 |samp-rate| How many samples per second to expect from the RRH. Default is 1000000|
 |spreading-factor| The spreading factor of the incoming LoRa signal. From [7-12] inclusive. Default is 12 |
 |--zmq-address-iq-in|ZMQ address to which the BBU subscribes to receive an IQ samples stream (from the RRH) to decode. Default value is tcp://127.0.0.1:5051 meaning the IQ samples are expected to come from localhost on port 5051. Normally RRH and BBU are on different devices but on the same network|
 
 ---
 
-The LoRa_Responder has the following params:
+The LoRa_Network_Server has the following params:
 
 ```
 usage: lora_socket_server.py [-h] [-o OUT_PORT] [-i INPUT_PORT]
@@ -168,7 +168,7 @@ To pass the parameters you have to specify them in the docker-compose.yml file.
 
 Example: 
 
-To have the LoRa_Decoder send the decoded messages out on port 30300 and the Lora_Responder to listen on port 30300 accordingly pass the arguments like below to the respective command field: 
+To have the LoRa_Decoder send the decoded messages out on port 30300 and the Lora_Network_Server to listen on port 30300 accordingly pass the arguments like below to the respective command field: 
 
 *docker-compose.yml*
 ``` 
@@ -179,8 +179,8 @@ services:
                 network_mode: host
                 tty: true
                 command: ["--decoded-out-port", "30300"]
-        lora_responder:
-                build: ./LoRa_Responder
+        lora_network_server:
+                build: ./LoRa_Network_Server
                 network_mode: host
                 tty: true
                 command: ["--input-port", "30300"] 
@@ -258,7 +258,7 @@ pip install pyzmq==18.1.0
 ```
 
 Then open the *zero_mq_split_a.grc* and the *zero_mq_split_b.grc* file in the docker/RRH directory resp. in the docker/BBU/LoRa_Decoder directory. Or run the *zero_mq_split_a.py* resp. the  *zero_mq_split_b.py* script in those directories with your shell.
-Also run the *lora_socket_server.py* sript inside docker/BBU/LoRa_Responder with your shell.
+Also run the *lora_socket_server.py* sript inside docker/BBU/LoRa_Network_Server with your shell.
 
 
 

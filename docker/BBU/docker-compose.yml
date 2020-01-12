@@ -5,8 +5,8 @@ services:
                 network_mode: host
                 tty: true
                 command: []
-        lora_responder:
-                build: ./LoRa_Responder
+        lora_network_server:
+                build: ./LoRa_Network_Server
                 network_mode: host
                 tty: true
                 command: [] # to append arguments to entrypoint fill array like this (sends response iq samples to port 3333) e.g ["-p", "3333"]

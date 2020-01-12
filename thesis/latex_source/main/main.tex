@@ -1,24 +1,123 @@
 \chapter{C-RAN for LoRa}
+\label{chap:cran_for_lora}
 
 \section{Goal}
+The goal is to set up a minimal working environment for a LoRa C-RAN.
+The gateway's functionality should separated into an RRH and BBU component and the 
+BBU component should be virtualized and run on general purpose hardware. 
+A simple network server should process the uplink message and schedule a response if required. From this setup 
+basic network requirements can be derived and measured as well as costs estimated.
 
 \section{Methods}
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.25\textwidth}
+     \includegraphics[width=1\textwidth]{figures/arduino.png}
+     \caption{Arduino with LoRa shield}
+    \end{subfigure}%
+    \hspace{2em}
+    \begin{subfigure}[b]{0.25\textwidth}
+     \includegraphics[width=1\textwidth]{figures/limesdr.png}
+     \caption{LimeSDR mini}
+    \end{subfigure}
+    \hspace{2em}
+    \begin{subfigure}[b]{0.25\textwidth}
+     \includegraphics[width=1\textwidth]{figures/raspberry.png}
+     \caption{Raspberry Pi with LoRa hat}
+    \end{subfigure}
+    \caption{Hardware devices}
+   \end{figure}
 \subsection{Sending uplink signals}
-\subsection{Sending downlink signals}
-getting a downlink signal
-recording from thethingsnetwrok
-recording from private networks
-manipualting private gateway
-offline generation of downlink signal see chapter
-\subsection{Transmission protocol}
+Uplink signals are sent with an arduino device equipped with a LoRa shield. 
+The arduino is controlled with an adapted form of the IBM LoraMAC-in-C (LMIC) library, modified to run on arduino devices.
+Using this library we implemented a simple communication protocol where a queue of packets is sent out in an interval.
+See section~\ref{sec:comm_prot} for detailed information.
+% \url{https://github.com/matthijskooijman/arduino-lmic}.
+\subsection{RRH and BBU}
+For splitting up the LoRa gateway's functionality we use two laptops. 
+One laptop has the LimeSDR mini plugged in and serves as the RRH. The other decodes the LoRa
+signal in software, processes the signal and also generates LoRa signals in software and sends those downlink I/Q samples back to the RRH.
+The processes on the second laptop run in virtualized environment with docker, more specifically docker compose, dockers orchestration tool.
+\\
+The LoRa OOT module by Robyns et al. has a branch called "encoder" where they began the implementation of modulating an uplink LoRa signal in software.
+It is able to generate a specific test packet but the modulated signal has errors as we saw when we inspected the data payload on the LoRa gateway.
+Having an uplink signal generator was a nice starting point, but we needed something to generate downlink signal. In the end we extended the existing implementation
+by adding a downlink signal generation ability, see section~\ref{todo}.
+\\
+Though, as a first workaround we set up a private LoRaWAN network, scheduled a downlink, and recorded it to a file. Now we can stream that file as a response by streaming its content,
+which are I/Q samples, to the RRH.
+
+
+\subsection{Network tools}
+For measuring network traffic, the tool "bmon" is used which stands for bandwidth monitor.
+It estimates the bits per second on all available network interfaces, ingoing as well as outgoing. 
+For adding network delay we used the tool "netem" which stands for network emulator. With netem we can add a delay to the qdisc scheduler
+which controls the processing the IP packets sent over the ethernet network interface.
+Both tools can easily be install with the "apt" package manager for ubuntu.
+\newpage
+% getting a downlink signal
+% recording from thethingsnetwrok
+% recording from private networks
+% manipualting private gateway
+% offline generation of downlink signal see chapter
+
 
 
 \section{Architecture}
-\subsection{BBU}
-\subsection{RRH}
-\subsection{Network}
+This section aims to first give a high level overview of the architecture and then give a more detailed 
+architectural overview of each component.
+Figure~\ref{fig:high_level_arch} shows the high level architecture with all the hardware components involved.
+There are two laptops in the same network connected by an ethernet cable. One laptop serves as an RRH. It has the LimeSDR mini 
+plugged into its USB port so it can send and receive signals.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/high_level_arch.png}
+    \caption{High level architecture}
+    \label{fig:high_level_arch}
+\end{figure}
+Incoming signals come from the arduino device. The arduino transmits packets over the air as radio waves. Those get picked up 
+by the RRH which converts the analog signal and send them as digital 32bit floats as I/Q samples over ethernet to the second laptop.
+This second laptop is the host for the virtual BBU that runs in a docker container. There the signals get demodulated and decoded.
+Then the decoded signal gets processed. In case a response is requested, a response signal is generated and sent as I/Q samples back to the RRH.
+From the it gets transmitted back to the arduino.
+\subsection{RRH and BBU}
+The RRH is the simplest component. It has an antenna for input and one for output. In Figure~\ref{fig:seq_diagram} the RRH is composed by the two 
+components "SDR RX" and "SDR TX". They correspond to the physical RX and TX slots ond the SDR device. The BBU is the "Lora Decoder" component. It runs 
+in a virtualized environment. Decoded messages get passed to the "Python Script" component. This acts as a network server that schedules an acknowledgement
+message back to the arduino. It could run on a third laptop connected via ethernet to the BBU laptop, but for our purposes it runs on the same laptop
+as the BBU but in a separate docker container.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/seq_diagram.png}
+    \caption{Sequence diagram}
+    \label{fig:seq_diagram}
+\end{figure}
+
 
 \section{Implementation}
+All communication between the components happens over sockets. We use the ZeroMQ (ZMQ) networking library.
+It is a good messaging library that offers N-to-N patterns as possible ways to connect the sockets, such as a request-reply pattern
+or pub-sub pattern and many more~\cite{zeromq}.
+GNU Radio offers ZMQ blocks out of the box, The TCP sink and source blocks for socket communication are still available but deprecated. 
+For communication between the RRH and the BBU the pub-sub (publish-subscribe) pattern is used.
+Figure~\ref{fig:seq_diagram} shows the "PUB" and "SUB" blocks and the data flow.
+The RRH has a PUB sockets that takes as input the I/Q sample stream generated by the RX of the SDR.
+The SUB socket in the BBU subscribes to this publishing socket. As this socket connection happens with TCP, the I/Q samples arrive in the order
+they are sent an can be directly passed to the LoRa Decoder. Robyns' et al. implementation of LoRa Decoder sends the decoded message 
+out on a UDP socket.  
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/impl_diagram.png}
+    \caption{Socket communication between components}
+    \label{fig:impl_diagram}
+\end{figure}
+\subsection{Communication protocol}
+\label{sec:comm_prot}
 
 \section{Results}
+
+\chapter{LoRa Tools}
 
