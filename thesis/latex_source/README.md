@@ -17,7 +17,7 @@ The BBU decodes the message. If the message says it require and ACK, the BBU sen
 * The container run in priviledged mode to easily access plugged in USB devices
 * The container run in network mode host (No NAT or Bridge has to be considered). This means the containers have the ip address of the host machine. If RRH and BBU run on different machines, find out their respective IP with *ifconfig* and pass the address as arguments in the docker-compose.yml, see below.
 
----
+-------
 
 ## RRH
 
@@ -66,9 +66,9 @@ Options:
 |capture-freq|The frequency in Hz at which the RRH listens for signals. Default value  is 86850000|
 |samp-rate|How many samples per second. Default value is 1000000. Must be at least double the bandwidth of the expected signal see *Nyquist-Shannon principle*|
 |zmq-address-iq-in| ZMQ address to which the RRH subscribes to receive an IQ samples stream (from the BBU) to then send out (TX). Default value is tcp://127.0.0.1:5052 meaning the IQ samples are expected to come from localhost on port 5052. Normally RRH and BBU are on different devices but on  the same network |
-|--zmq-address-iq-out|ZMQ address on which the RRH streams out the IQ samples (to the BBU) it receives (RX). Default is tcp://*:5051 meaning it publishes the stream on all interface on port 5051|
+|--zmq-address-iq-out | ZMQ address on which the RRH streams out the IQ samples (to the BBU) it receives (RX). Default is tcp://*:5051 meaning it publishes the stream on all interface on port 5051 |
+-------
 
----
 To pass the parameters you have to specify them in the docker-compose.yml
 
 Example: 
@@ -76,6 +76,7 @@ Example:
 To pass a capture frequencey of 915M and a sample rate of 250k enter the params in the following way in the command field:
 
 *docker-compose.yml*
+
 ``` 
 version: '3'
 services:
@@ -88,7 +89,8 @@ services:
         command: ["--capture-freq", "915000000", "--samp_rate", "250000"]
 ```
 
----
+------
+
 ## BBU
 
 The BBU has two components: 
@@ -97,7 +99,7 @@ The BBU has two components:
 
 In the BBU directory run:
 
-``` 
+```
 docker-compose up 
 ```
 
@@ -126,6 +128,7 @@ Options:
                         Set zmq_address_iq_in [default=tcp://127.0.0.1:5051]
 
 ```
+
 | Param               | Explanation        |
 | -------------       | ------------- |
 | bandwith  | The bandwidth in Hz of the LoRa signal. Default is 125000.   |
@@ -134,8 +137,7 @@ Options:
 |samp-rate| How many samples per second to expect from the RRH. Default is 1000000|
 |spreading-factor| The spreading factor of the incoming LoRa signal. From [7-12] inclusive. Default is 12 |
 |--zmq-address-iq-in|ZMQ address to which the BBU subscribes to receive an IQ samples stream (from the RRH) to decode. Default value is tcp://127.0.0.1:5051 meaning the IQ samples are expected to come from localhost on port 5051. Normally RRH and BBU are on different devices but on the same network|
-
----
+------
 
 The LoRa_Network_Server has the following params:
 
@@ -162,7 +164,7 @@ optional arguments:
 | -------------       | ------------- |
 | out-port  | Publish the response IQ samples on all interface on this port. Default is  5052. (The response is 3 bytes long ("ACK") and SF 12. This is hardcoded for now)|
 |input-port| UDP port to receive the decoded messages sent by the LoRa_Decoder. Default is 40868|
----
+-------
 
 To pass the parameters you have to specify them in the docker-compose.yml file.
 
@@ -199,7 +201,7 @@ services:
   * With LimeSuite installed run *LimeUtil --find*
   * Or run *lsusb -v* and look for the LimeSDR device
 
----
+-------
 
 # Arduino
 
@@ -216,7 +218,7 @@ services:
 
 PlatformIO was used to compile and upload the image to the arduino.
 
----
+-------
 
 ## Manual installation Ubuntu
 

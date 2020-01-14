@@ -9,11 +9,11 @@
     "name": "latexmk",
     "command": "latexmk",
     "args": [
+      "--shell-escape",
       "-synctex=1",
       "-interaction=nonstopmode",
       "-file-line-error",
       "-pdf",
-      "--shell-escape",
       "-outdir=%OUTDIR%",
       "%DOC%"
     ],
@@ -23,11 +23,11 @@
     "name": "lualatexmk",
     "command": "latexmk",
     "args": [
+      "--shell-escape",
       "-synctex=1",
       "-interaction=nonstopmode",
       "-file-line-error",
       "-lualatex",
-      "--shell-escape",
       "-outdir=%OUTDIR%",
       "%DOC%"
     ],
@@ -45,10 +45,10 @@
     "name": "pdflatex",
     "command": "pdflatex",
     "args": [
+      "--shell-escape",
       "-synctex=1",
       "-interaction=nonstopmode",
       "-file-line-error",
-      "--shell-escape",
       "%DOC%"
     ],
     "env": {}
