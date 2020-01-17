@@ -194,7 +194,8 @@ while True:
 
 The LMIC library runs a loop that executes jobs scheduled to run at a specified time. 
 In the \emph{setup()} function that runs once when the arduino starts settings such as 
-the spreading factor, frequency and coding rate are set. Also, the initial job for the LMIC is initialized there, see 
+the spreading factor, frequency and coding rate are set. The frequency is given in Hertz and the the datarate 
+is set with a predefined enum from the LMIC library. Also, the initial job for the LMIC is initialized there, see 
 Listing~\ref{lst::ard_setup} last line.
 
 \begin{listing}[H]
@@ -225,13 +226,36 @@ void setup() {
 \end{listing}
 
 The last line schedules the initial job  \emph{txjob} with the \emph{my\_tx\_func} function that gets run
-on execution of the job.
+on execution of the job, see~Listing~\ref{lst::ard_mytx}. It takes the the index of the packet to send, Listing~\ref{lst::packets}, and
+checks if the packet has "ACK" appended. Then the transmit function \emph{tx(packet, callback)} gets executed. 
+It takes a packet and a callback function that gets executed after the transmission is finished. 
+If an "ACK" is present, the callback function is set to \emph{my\_txdone\_func}, if not it is set to \emph{my\_txdone\_no\_ack\_func}.
+Finally, in line 16 in Listing\ref{lst::ard_mytx}, schedules itself to be run again after \emph{TX\_INTERVAL} which is 4 seconds.
 
 
 \begin{listing}[H]
     \begin{minted}[frame=single]{c++}
+#define TX_INTERVAL 4000
+
+int currentPacketIndex = 0;
+const int numOfPackets = 3;
+char *myPackets[numOfPackets] = {
+    "This is packet 1ACK", 
+    "This is packet 2ACK", 
+    "This is packet 3",
+};
+    \end{minted}
+    \caption{Packets 1 and 2 have "ACK" appended in their payload, while packet 3 does not}
+    \label{lst::packets}
+    
+\end{listing}
+
+
+\begin{listing}[H]
+    \begin{minted}[frame=single, linenos]{c++}
 static void my_tx_func(osjob_t *job) {
 if (currentPacketIndex < numOfPackets) {
+    ...
     char lastThree[3];
     memcpy(lastThree, &myPackets[currentPacketIndex][length - 3], 3);
     const char ack[] = {'A', 'C', 'K'};
@@ -253,10 +277,40 @@ if (currentPacketIndex < numOfPackets) {
     \end{minted}
     \caption{\emph{my\_tx\_fun} function}
     \label{lst::ard_mytx}
-    
 \end{listing}
 
+The difference between the callback functions passed to the transmission function is that one
+waits to receive an acknowledgement while the other simply increases the \emph{currentPacketIndex}
+so the next packet gets sent the next time \emph{my\_tx\_func} get called.
 
+\begin{listing}[H]
+    \begin{minted}[frame=single, linenos]{c++}
+static void my_rx_func(osjob_t *job)
+{
+    if (LMIC.dataLen == 3)
+    {
+    Serial.println("Got ACK");
+    // if we get our ACK, start with next transmission, 
+    // reschedules transmission at half TX_INTERVAL
+    currentPacketIndex++;
+    os_setTimedCallback(&txjob, os_getTime()
+                            + ms2osticks(TX_INTERVAL / 2), my_tx_func);
+    }
+    else
+    {
+    Serial.println("NOT AN ACK");
+    // resend packet if no ACK received within 3*TX_INTERVAL,
+    // reschedules transmission in 3* TX_INTERVAL
+    os_setTimedCallback(&txjob, os_getTime() 
+                            + ms2osticks(3 * TX_INTERVAL), my_tx_func);
+    // listen again
+    rx(my_rx_func);
+    }
+}
+    \end{minted}
+    \caption{RX function that waits for the response or reschedules the packet transmission}
+    \label{lst::ard_myrx}
+\end{listing}
 
 \section{Results}
 
