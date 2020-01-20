@@ -15,16 +15,19 @@ basic network requirements can be derived and measured as well as costs estimate
     \begin{subfigure}[b]{0.25\textwidth}
      \includegraphics[width=1\textwidth]{figures/arduino.png}
      \caption{Arduino with LoRa shield}
+     \label{fig:ard}
     \end{subfigure}%
     \hspace{2em}
     \begin{subfigure}[b]{0.25\textwidth}
      \includegraphics[width=1\textwidth]{figures/limesdr.png}
      \caption{LimeSDR mini}
+     \label{fig:sdr}
     \end{subfigure}
     \hspace{2em}
     \begin{subfigure}[b]{0.25\textwidth}
      \includegraphics[width=1\textwidth]{figures/raspberry.png}
      \caption{Raspberry Pi with LoRa hat}
+     \label{fig:rasp}
     \end{subfigure}
     \caption{Hardware devices}
    \end{figure}
@@ -49,12 +52,18 @@ Though, as a first workaround we set up a private LoRaWAN network, scheduled a d
 which are I/Q samples, to the RRH.
 
 
-\subsection{Network tools}
+\subsection{Network Tools}
 For measuring network traffic, the tool "bmon" is used which stands for bandwidth monitor.
 It estimates the bits per second on all available network interfaces, ingoing as well as outgoing. 
 For adding network delay we used the tool "netem" which stands for network emulator. With netem we can add a delay to the qdisc scheduler
 which controls the processing the IP packets sent over the ethernet network interface.
 Both tools can easily be install with the "apt" package manager for ubuntu.
+
+\subsection{Hardware}
+An Arduino Mega 2560 with the Dragion LoRa Shield v1.4 is the end device, see Figure~\ref{fig:ard}.
+A LimeSDR mini, Figure~\ref{fig:sdr}, serves as the receiver for the RRH.
+The Raspberry Pi, Figure~\ref{fig:rasp} with a LoRa hat was used for testing up -and downlink signals, but not for the experiment itself. 
+Its hat is the iC880A LoRaWAN concentrator for the 868MHz frequency.
 \newpage
 % getting a downlink signal
 % recording from thethingsnetwrok
@@ -282,6 +291,14 @@ if (currentPacketIndex < numOfPackets) {
 The difference between the callback functions passed to the transmission function is that one
 waits to receive an acknowledgement while the other simply increases the \emph{currentPacketIndex}
 so the next packet gets sent the next time \emph{my\_tx\_func} get called.
+The callback to the RX function gets executed every time a packets is received.
+Listing~\ref{lst::ard_myrx} shows the implementation. The response signal by sent
+by the network server has the payload "ACK", which is three bytes. 
+If the \emph{LMIC.dataLen} is three bytes, it is assumed it is the expected acknowledgement signal.
+The \emph{currentPacketIndex} gets incremented and the next transmission job gets set up.
+Else, the \emph{currentPacketIndex} does not get incremented so the same packet gets rescheduled 
+for transmission and the RX function gets called again.
+
 
 \begin{listing}[H]
     \begin{minted}[frame=single, linenos]{c++}
@@ -308,11 +325,84 @@ static void my_rx_func(osjob_t *job)
     }
 }
     \end{minted}
-    \caption{RX function that waits for the response or reschedules the packet transmission}
+    \caption{RX function that checks for the response or reschedules the packet transmission}
     \label{lst::ard_myrx}
 \end{listing}
 
 \section{Results}
+\subsection{Network Utilization}
+Monitoring the network utilization with bmon yields 
+335 bytes per second on the ethernet network interface when idle. Once the C-RAN gets started the network
+utilization rises to 8MiB/s (Mebibytes) which are equal to 67’108’864 bits.
+Bmon only gives an estimation. The theoretical value can be derived the following way:
+\\
+\begin{itemize}
+    \item The LimeSDR had the sample rate set to 1 million samples per second by default.
+    \item The type is of complex type of 32 bit, (I/Q) => 2 x 32 bit, which gives 64 million~bits/s
+    \item MTU (Maximum Transmission Unit) on most systems is 1500 bytes.
+    \item Overhead for TCP and IP is 20 bytes each => 40 bytes
+    \item This gives a MSS (Maximum Segment Size) of 1460 bytes
+    \item 64M bits ÷ (1460 bytes×8) = 5479.45 packets needed
+    \item Total overhead: 5480 packets x (40 bytes x 8) = 175360 bits
+    \item 64’000’000 bits + 1’753’600 bits = 65’753’600 bit/s = 7.8 MiB/s
+\end{itemize}
+
+The RRH is constantly sending samples to the BBU. It does not matter if the arduino 
+sends 1 signal every 4 seconds or 40 signals per second, the network utilization stays the same
+as the sample rate stays the same. The experiment worked without error with the 
+10 gigabit ethernet connection, but it did not work over Wi-Fi connection.
+The response signal sent from the BBU to the RRH did not arrive on the RRH.
+\\
+\\
+\textbf{Optimization}: The load on the network can be reduced. According to the Nyquist-Shannon sampling theorem~\cite{Shannon1949}
+a sufficient sampling rate $f_{s}$ for a signal with bandwidth $B$ is given by:
+\begin{center}
+    $f_{s} > 2*B$  
+\end{center}
+
+The signal bandwidth of the LoRa signal sent with the arduino is set to 125 kHz. Thus the minimum sampling frequency according to the formula above
+is 250'000 samples per second which is a quarter of the previous sample rate of 1 million. This also quarters the network utilization from 8 MiB to 2 Mib, see Table~\ref{tabl:samprates}.
+Lowering the sampling rate below the Nyquist-Shannon limit results in the signal not getting successfully decoded.
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ |p{3cm}|p{3cm}|p{3cm}|p{3cm}| }
+        \hline
+        \multicolumn{4}{|c|}{Sample Rates and Network Utilization} \\
+        \hline
+        Samples per second & Max. Signal Bandwidth& Network Utilization & Decode Success in Experiment\\
+        \hline
+        1'000'000  &500 kHz & 8 MiB/s    &yes\\
+        500'000  &250 kHz & 4 MiB/s    &yes\\
+        250'000&  125 kHz&  2 MiB/s  & yes\\
+        125'000 & 62.5 kHz & 1 MiB7s & no\\
+        \hline
+       \end{tabular}
+\caption{Sampling rates and network utilization}
+\label{tabl:samprates}
+\end{table}
+
+LoRaWAN defines different regional parameters. In the EU SF 8 to SF 12 signals are sent with 125 kHz bandwidth, while SF 7
+can be sent with 125 kHz or 250 kHz bandwidth. In the US on the other hand SF 7 to SF 12 can also be sent with
+a 500 kHz bandwidth \cite{lora_wan_reg_params}.
+This has to be taken into consideration when designing a LoRaWAN compliant C-RAN architecture.
+The network load for decoding a 500 kHz bandwidth US signal is for times higher than a EU 125 kHz bandwidth signal.
+
+\subsection{Cost}
+LoRa gateways come in various prices. The low cost indoor commercial gateway by TTN costs around 70\$ while their higher end 
+gateway sells for 300\$. Cheaper gateways can be built with and Arduino and a LoRa shield such as the Dragino shield (22\$).
+The issue is that those are often based on the SX1272/SX1276 chips. While cheaper, those gateways are so called single channel 
+gateways. They can only listen on one channel with one spreading factor. They are not LoRaWAN compliant~\cite{single_chan_gate}.
+LoRaWAN compliant gateways can be built with a Raspberry Pi with a iC880A concentrator (130\$) which use the SX1301/SX1257 chips. They can receive packets
+of sent with different spreading factors on up to 8 channels in parallel.
+\\
+The LoRa Decoder block of Robyns et al. does not yet support multichannel decoding. Spreading factor and center frequency
+need to be set explicitly, making it a single channel gateway. The advantage of having a decoder in software is that new instances 
+of the LoRa Decoder block can be added without additional hardware costs. As the BBU is containerized, starting up a new instance 
+is as easy as instructing docker to start a new instance of the decoder and pass it the desired frequency and SF. This saves the costs of 
+a LoRaWAN concentrator.
+
+
+
 
 \chapter{LoRa Tools}
 
