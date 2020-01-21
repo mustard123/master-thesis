@@ -64,7 +64,6 @@ An Arduino Mega 2560 with the Dragion LoRa Shield v1.4 is the end device, see Fi
 A LimeSDR mini, Figure~\ref{fig:sdr}, serves as the receiver for the RRH.
 The Raspberry Pi, Figure~\ref{fig:rasp} with a LoRa hat was used for testing up -and downlink signals, but not for the experiment itself. 
 Its hat is the iC880A LoRaWAN concentrator for the 868MHz frequency.
-\newpage
 % getting a downlink signal
 % recording from thethingsnetwrok
 % recording from private networks
@@ -74,6 +73,7 @@ Its hat is the iC880A LoRaWAN concentrator for the 868MHz frequency.
 
 
 \section{Architecture}
+\subsection{Overview}
 This section aims to first give a high level overview of the architecture and then give a more detailed 
 architectural overview of each component.
 Figure~\ref{fig:high_level_arch} shows the high level architecture with all the hardware components involved.
@@ -90,6 +90,8 @@ by the RRH which converts the analog signal and send them as digital 32bit float
 This second laptop is the host for the virtual BBU that runs in a docker container. There the signals get demodulated and decoded.
 Then the decoded signal gets processed. In case a response is requested, a response signal is generated and sent as I/Q samples back to the RRH.
 From the it gets transmitted back to the arduino.
+\subsection{Containerization and Orchestration}
+docker docker compose, ready for cran as service openshift
 \subsection{RRH and BBU}
 The RRH is the simplest component. It has an antenna for input and one for output. In Figure~\ref{fig:seq_diagram} the RRH is composed by the two 
 components "SDR RX" and "SDR TX". They correspond to the physical RX and TX slots ond the SDR device. The BBU is the "Lora Decoder" component. It runs 
@@ -400,6 +402,98 @@ need to be set explicitly, making it a single channel gateway. The advantage of 
 of the LoRa Decoder block can be added without additional hardware costs. As the BBU is containerized, starting up a new instance 
 is as easy as instructing docker to start a new instance of the decoder and pass it the desired frequency and SF. This saves the costs of 
 a LoRaWAN concentrator.
+These savings are offset by the need for general purpose hardware the containers can run on and the higher bandwidth requirements.
+
+Using the amazon aws cost calculator \url{https://calculator.s3.amazonaws.com/index.html} the following three fields are of importance : 
+\begin{itemize}
+    \item Compute:
+    \begin{itemize}
+        \item  Amazon EC2 Instance
+    \end{itemize}
+    \item  Data Transfer:
+    \begin{itemize}
+        \item Data Transfer In
+        \item Data Transfer Out  
+    \end{itemize}
+\end{itemize}
+
+For the EC2 instance we select the \emph{a1.medium} which comes with 1 vCPU and 2 GiB of memory at \emph{0.0255\$} per hour.
+\\
+\\
+Data Transfer In has to be 8 MiB/s to accommodate the maximum possible signal bandwidth of 500 kHz in the US or 
+4 MiB/s for the maximal signal bandwidth of 250 kHz in EU. In this cost estimation example we proceed with 4 MiB/s for Europe.
+4 MiB per second are 363 GB per day. Data input is free on AWS  giving a daily cost of 0\$.
+\\
+\\
+Data Transfer Out on the other hand does cost. The amount of data that gets sent out depends on
+how many uplink signals require a downlink signal. In our example a fixed 3 byte payload response is sent.
+In LoRaWAN, downlink messages can have variable length, multiple bytes long.
+Sticking with our example, the fixed downlink response signal with a payload of 3 bytes (excluding preamble, header and crc ), SF 7 and coding rate 4/5,
+yields an I/Q sample stream of 248 kB (including preamble, header and crc) after modulation.
+How many downlink signals will the required? That depends on wether the end-node requires a confirmed uplink.
+However, there is an upper limit. The EU specifies a 1\% duty cycle for the 868.0 - 868.6 MHz frequency plan~\cite{duty_cycle}.
+The downlink signal has an airtime of 25.86 ms. With a duty cycle of 1\% a downlink signal can be sent every 3 seconds.
+This means a maximum of 28'800 downlink signals of this type can be sent by one gateway a day.
+Data Transfer Out is thus limited to 7 GB a day if duty cycles are respected, $28800 * 248~kB = 7 GB$.
+TTN encourages end-devices to not use confirmed uplinks as most gateways are not designed to send an receive
+simultaneously. We assume for our experiment that about 30\% of total possible downlink signals need to be sent
+which gives a Data Transfer Out of 2.1 GB/day.
+\\
+\\
+Total monthly cost amounts to 24.07\$:
+\begin{itemize}
+    \item Compute:
+    \begin{itemize}
+        \item  Amazon EC2 Instance: 18.67\$
+    \end{itemize}
+    \item  Data Transfer:
+    \begin{itemize}
+        \item Data Transfer In: 0\$
+        \item Data Transfer Out: 5.40\$  
+    \end{itemize}
+\end{itemize}
+
+As the modulated signals have to ben sent out over TCP/IP from the BBU to the RRH, a TCP/IP overhead 
+of 2.7\% could theoretically be added, but it is negligible as it is an estimation for 
+comparison and not for absolute numbers.
+\\
+\\
+In the traditional LoRa setup where the gateway is not split into and RRH and BBU 
+component the decoded packet get sent to the network server and not the I/Q samples.
+Assuming the same setup as before, instead of calculating $28800 * 248~kB = 7 GB$, the following
+has to be calculated: 
+
+\begin{itemize}
+    \item payload size: 3 bytes
+    \item header size: 4 bytes
+    \item CRC size: 0 bytes, downlink messaged do not have a CRC
+\end{itemize}
+
+This yield the following $28800 * 7~Bytes = 0.0002016 GB$, which is an insignificant daily amount for AWS as
+it gives already 0\$ as cost estimation before we even apply the 30\% usage assumptions.
+Thus, sending the I/Q samples over the internet to the cloud is infinitely more expensive compared to just 
+sending the demodulated signal. 
+\\
+However, in a local cloud setup where RRH and BBU are on the same network
+or in a network architecture the data does not have to be routed over the internet and 
+the BBU can still be virtualized and centralized in a BBU hotel for much cheaper.
+In such a setup hardware and operational costs can be saved as outlined in section~\ref{sec:moving_to_cran}.
+For each gateway at least 130\$ costs for the LoRa concentrator could be saved by doing its job in software.
+For a hobbyist that operates a single gateway it may not be useful as now he needs to invest in general purpose hardware 
+that is fast enough to do the decoding in software. Though, for an operator with multiple gateways, centralizing and virtualizing
+the decoding has similar benefits as a C-RAN for LTE.
+
+\subsection{Network Delay}
+
+
+
+
+
+
+
+
+
+
 
 
 

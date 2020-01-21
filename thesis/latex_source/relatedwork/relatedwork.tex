@@ -28,7 +28,6 @@ LoRaWAN is not the same all around the world. There are regional parameters that
 In Europe LoRaWAN operates on the in the 863-870MHz and 433MHz ISM band and in North America the 902-928MHz ISM band. Also channel bandwidth and maximum transmission 
 settings are regulated by the government and thus are not the same for all regions~\cite{lora_wan_regional}.
 
-
 \section{LoRaWAN architecture}
 A LoRaWAN network architecture is a star-of-stars topology. The gateways relay the messages between the end-devices and a central network server.
 Gateways are connected to the network server via IP connections, converting the RF packets to IP packets and vice versa~\cite{about_lora_wan}.
@@ -53,7 +52,6 @@ A unique 128-bit network session key is shared between  the end-device and the n
 another 128-bit application session key is shared end-to-end at the application level~\cite{about_lora_wan}.
 With those measures LoRaWAN prevents eavesdropping. Spoofing is prevented by a MIC (Message Integrity Code)
 in the MAC payload, and replay attacks are prevent by utilizing frame counters~\cite{lora_security}.
-
 
 \section{End-node Classes}
 There are three classes of end-devices. The following description is adapted from the LoRa Alliance guide~\cite{about_lora_wan,what_is_lora}:
@@ -82,10 +80,8 @@ There are three classes of end-devices. The following description is adapted fro
 
 \end{itemize}
 
-\newpage
-
-
 \section{LoRa signal (uplink)}
+
 \subsection{Chirps}
 A LoRa signal is a series of so called chirps as LoRa is derived from the Chirp Spread Spectrum modulation (CSS) technique. 
 There are up-chirps and down-chirps. In CSS chirps are deliberately spread across the available bandwidth. Up-chirps go from low frequency 
@@ -144,8 +140,6 @@ values. The last symbols encodes the hex value 142 which corresponds to these 9 
     \label{fig:Goodbye_decoded}
 \end{figure}
 
-\newpage
-
 \subsection{Coding Rate}
 LoRa signals are encoded with a coding rate (CR). The CR denotes the proportion of how many bits carry actual information. The bits that do not carry information are used 
 for Forward Error Correction. The formula for coding rate is $CR=4/(4 + CR)$ where CR $\in \{1,2,3,4\}$. A CR of 1 is thus the proportion of 4/5 of actual information over 
@@ -153,7 +147,6 @@ bits used for error correction\cite{SX_design_guide,coding_rate_mobilefish}.
 With FEC, corrupted bits e.g. due to interference can be corrected. With CR of 4, corresponds to $4/8 = 1/2$, half the transmitted bits carry information, the other half is for FEC.
 The higher the CR (from 1-4) the more bits can get corrupted and corrected by FEC.
 On the other hand, the higher the CR the more bits need to be transmitted which drains the battery more.
-
 
 \subsection{Spreading Factor \& Time on Air}
 The longer the packet, the longer the transmission time. LoRa packets can be shortened
@@ -205,8 +198,6 @@ With:
     
 \end{enumerate}
 
-This website \url{https://www.loratools.nl/#/airtime} has an online tool for calculation the airtime.
-
 As Figure~\ref{fig:packet_struct} shows, the header is always encoded with the highest coding rate, $CR=4$.
 This is because the header contains crucial information such as the packet length.
 
@@ -235,7 +226,6 @@ shows.
     \caption{LoRaWAN packet~\cite{lora_wan_spec}}
     \label{fig:lora_wan_struct}
 \end{figure}
-
 
 \chapter{LoRa in SDRs}
 Software-defined radios (SDR) implement components that are usually implemented in hardware.
@@ -291,14 +281,12 @@ has demodulation, decoding and channelization all in one single block as shown i
 The module has been tested with various SDR devices but not with the LimeSDR mini. Nevertheless it worked
 well for us and we based the CRAN implementation for LoRa on this module.
 
-
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.8\textwidth]{figures/robyns_gnu.png}
     \caption{Single LoRa Receiver block (top right)~\cite{robyns_implementation}}
     \label{fig:robyns_gnu}
 \end{figure}
-
 
 \section{LoRa decoding}
 The difficulty with reverse engineering LoRa is that its proprietary and
@@ -328,7 +316,6 @@ coding rate.
 At the time of Knight's talk, he did not decode the header. Robyns implementation is quite complete except for CRC checks of the payload and header
 as well as decoding multiple channels simultaneously. 
 
-
 \chapter{C-RAN in cellular networks}
 A Radio Access Network (RAN) provides the connection between and end-device e.g. a mobile phone and the core network e.g network of the telecom provider.
 A RAN provides access and manages resources across the radio sites. It is a major component in telecommunications. RAN components include a base station and antennas
@@ -341,7 +328,7 @@ at the top as Figure~\ref{fig:DRAN} shows. RRH and BBU are connected via the Com
 The BBUs in each tower are connected via ethernet to the Mobile Switching Center (MSC)~\cite{fujitsu}. 
 
 \section{Moving to C-RAN}
-
+\label{sec:moving_to_cran}
 
 \begin{figure}[h]
     \centering
@@ -354,7 +341,6 @@ In a Cloud / Centralized RAN (C-RAN) the BBU in each tower site are move into a 
 This new architectural setup results in saving const in capital expenditures as well as operational expenditures. The many small routers in the cell towers
 can be replaced by one in the BBU hotel. Deployment, maintenance and scaling can be expedited as all the BBU are centralized.
 Also this enables the BBU for Network Function Virtualization (NFV) and the RAN for Software Defined Networking (SDN)~\cite{fujitsu}.
-
 
 \begin{figure}[H]
     \centering
@@ -381,6 +367,3 @@ Nikaein et al. found that containers e.g. docker proved to be more adequate in t
 and provide direct access to the RF hardware. Virtual machines in, particular KVM, also gave them good performance, but require low latency mechanism to access I/O resources.
 \\
 For the C-RAN for LoRa, described in chapter~\ref{chap:cran_for_lora}, docker is used for the virtualization layer.
-
-
-
