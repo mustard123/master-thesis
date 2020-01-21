@@ -210,7 +210,7 @@ services:
 1. Go to the arduino directory. 
 2. Compile and upload the code to the arduino
 3. The arduino runs the protocol in the manner described at the beginning.
-4. It send packets with SF12 and expects the ACK response to be SF12 as well.
+4. It send packets with SF9 and expects the ACK response to be SF12 as well.
 5. After 3 packets the arduino has finished.
 6. Look at the Serial output for details. Baud rate 9600
 

@@ -217,10 +217,10 @@ void setup() {
   // initialize runtime env
   os_init();
   ...
-  // Set up these settings once, and use them for both TX and RX
+  
   LMIC.freq = 868500000;
   LMIC.txpow = 27; // Maximum TX power
-  LMIC.datarate = DR_SF12;
+  LMIC.datarate = DR_SF9;
   // This sets CR 4/5, BW125 (except for DR_SF7B, which uses BW250)
   LMIC.rps = updr2rps(LMIC.datarate);
 
@@ -484,6 +484,9 @@ that is fast enough to do the decoding in software. Though, for an operator with
 the decoding has similar benefits as a C-RAN for LTE.
 
 \subsection{Network Delay}
+Speed is essential for most communication systems.
+LoRaWAN specifies two receive windows for class A devices. One after 
+
 
 
 

@@ -17,7 +17,7 @@
 // this interval should not also be increased.
 // See this spreadsheet for an easy airtime and duty cycle calculator:
 // https://docs.google.com/spreadsheets/d/1voGAtQAjC1qBmaVuP1ApNKs1ekgUjavHuVQIXyYSvNc
-#define TX_INTERVAL 8000
+#define TX_INTERVAL 4000
 
 // Pin mapping
 const lmic_pinmap lmic_pins = {
@@ -53,6 +53,8 @@ char *myPackets[numOfPackets] = {
 // Transmit the given string and call the given function afterwards
 void tx(const char *str, osjobcb_t func)
 {
+  LMIC.datarate = DR_SF9;
+  LMIC.rps = updr2rps(LMIC.datarate);
   os_radio(RADIO_RST); // Stop RX first
   delay(1);            // Wait a bit, without this os_radio below asserts, apparently because the state hasn't changed yet
   LMIC.dataLen = 0;
@@ -66,6 +68,9 @@ void tx(const char *str, osjobcb_t func)
 // Enable rx mode and call func when a packet is received
 void rx(osjobcb_t func)
 {
+   LMIC.datarate = DR_SF12;
+  LMIC.rps = updr2rps(LMIC.datarate);
+  delay(1);
   LMIC.osjob.func = func;
   LMIC.rxtime = os_getTime(); // RX _now_
   // Enable "continuous" RX (e.g. without a timeout, still stops after
@@ -214,8 +219,6 @@ void setup()
   // initialize runtime env
   os_init();
 
-  // Set up these settings once, and use them for both TX and RX
-
 #if defined(CFG_eu868)
   // Use a frequency in the g3 which allows 10% duty cycling.
   LMIC.freq = 868500000;
@@ -228,7 +231,7 @@ void setup()
   // Use a medium spread factor. This can be increased up to SF12 for
   // better range, but then the interval should be (significantly)
   // lowered to comply with duty cycle limits as well.
-  LMIC.datarate = DR_SF12;
+  LMIC.datarate = DR_SF9;
   // This sets CR 4/5, BW125 (except for DR_SF7B, which uses BW250)
   LMIC.rps = updr2rps(LMIC.datarate);
 
