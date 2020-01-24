@@ -515,7 +515,36 @@ Table~\ref{tabl:delay} summarizes the results.
 The higher the delay the less network utilization was measured with bmon. But only after delay,
 namely 300ms. Without delay, RX resp. TX on the ethernet ports of the RRH and BBU is 8 MiB/s.
 With a 800ms delay it is about 2.32 MiB/s. With a 400 ms delay it is 5.5 MiB/s. With a delay 
-of 300ms or less it bmon measured still 8 MiB/s.
+of 300ms or less bmon measured still 8 MiB/s.
+\\
+The expectation was that the signals would get decoded on the BBU the same as without delay just later.
+However this was not the case. There was a difference between only a single signal being picked up by the RRH and sent 
+to the BBU and the arduino sending multiple signals in an interval and the RRH sending I/Q samples of multiple signals 
+to the BBU.
+\\
+For a delay of 500 ms and below the following held true in the experiment:
+\\
+\begin{itemize}
+    \item The arduino sends a single signal then stops. The RRH receives the signal and sends the I/Q sample stream
+    to the BBU. On the BBU the signal gets successfully decoded with a delay of 2 to 10 times the delay set with Netem.
+    \item The arduino sends signals in a 4 second interval. The signals get decoded in order on the BBU.
+\end{itemize}
+
+
+For a delay of 500 ms and up the following held true in the experiment:
+\\
+\begin{itemize}
+    \item The arduino sends a single signal then stops. The RRH receives the signal and sends the I/Q sample stream 
+    to the BBU. On the BBU the signal does not get decoded.
+    \item The arduino send signals in a 4 second interval. Some signals get decoded after the delay times 10. Some signals do not get decoded.
+    In an experiment with 800 ms delay,  the first three signals did not get decoded, the fourth signal did after a 10 seconds delay. \\
+    Generally, the first signals never got decoded, only the 4th or later signals got eventually decoded by the BBU.
+    A possible cause could be that either the LorRa decoder block or the GNU Radio scheduler have an issue 
+    with some sort of buffer not being filled fast enough when a single signal is sent and if multiple signals are sent 
+    the buffer has time to fill up which leads to some decode success when multiple signals are sent in an interval.
+    This is but pure speculation and would need to be investigated further.
+
+\end{itemize}
 
 
 \begin{table}[h]
@@ -524,20 +553,36 @@ of 300ms or less it bmon measured still 8 MiB/s.
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{SScc}
         \toprule 
-            {\multirow{1}{*}[-2pt]{Delay }} & {\multirow{1}{*}[-2pt]{Network Traffic }} & \multicolumn{2}{c}{Decode Success}\\ \cmidrule{3-4}
+            {\multirow{1}{*}[-2pt]{Netem Delay}} & {\multirow{1}{*}[-2pt]{Network Traffic }} & \multicolumn{2}{c}{Eventual Decode Success}\\ \cmidrule{3-4}
         
-            {(ms)}&{(MiB/s)}&Single Signal & Multiple Signals \\
+            {(ms)}&{(MiB/s)}&Single Signal & Signal Interval \\
             \midrule
             0  & 8  & yes & yes \\
-            20  & 6.4 & yes & yes \\
-            100  & 2.1 & yes & yes \\
-            0  & 500 & yes & yes \\
-
+            20  & 8 & yes & yes \\
+            50  & 8 & yes & yes \\
+            100  & 8 & yes & yes \\
+            200  & 8 & yes & yes \\
+            300  & 8 & yes & yes \\
+            400  & 5.5 & yes & yes \\
+            500  & 4.25 & no & yes \\
+            600  & 3.6 & no & yes \\
+            800  & 2.3 & no & yes \\
+            1000  & 1.92 & no & yes \\
             \bottomrule
     \end{tabular}
     \caption{Effect of delay on network traffic on decode process}
     \label{tabl:delay}
 \end{table}
+
+\subsection{Processing Delay}
+Processing delays on the LoRa network server were straightforward and as expected. 
+Sleep is called in the Python script that sends the downlink. If this is more than the 
+time the Arduino is set to listen for downlink signals, the downlink is missed.
+For LoRaWAN class A devices this is 1 resp. 2 seconds after uplink.\\
+In this example the Arduino sends in an interval of 4 seconds which is more than enough time under good conditions.
+However if network delay and processign delays occurs, this changes.
+With a Netem delay of 400 ms, the decoded message arrives about 3 seconds later, which leaves only 1 second for the downlink to be sent.
+
 
 \begin{table}
     \caption{Standard behaviour of the \texttt{S} column type.}
