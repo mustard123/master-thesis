@@ -524,13 +524,13 @@ of 300ms or less it bmon measured still 8 MiB/s.
     \renewcommand{\arraystretch}{1.2}
     \begin{tabular}{SScc}
         \toprule 
-            {\multirow{2}{*}[-2pt]{Delay (ms)}} & {\multirow{2}{*}[-2pt]{Network Traffic (MiB/s)}} & \multicolumn{2}{c}{Decode Success}\\ \cmidrule{3-4}
+            {\multirow{1}{*}[-2pt]{Delay }} & {\multirow{1}{*}[-2pt]{Network Traffic }} & \multicolumn{2}{c}{Decode Success}\\ \cmidrule{3-4}
         
-           &&Single Signal & Multiple Signal \\
+            {(ms)}&{(MiB/s)}&Single Signal & Multiple Signals \\
             \midrule
             0  & 8  & yes & yes \\
-            0  & 6.4 & yes & yes \\
-            0  & 2.1 & yes & yes \\
+            20  & 6.4 & yes & yes \\
+            100  & 2.1 & yes & yes \\
             0  & 500 & yes & yes \\
 
             \bottomrule
