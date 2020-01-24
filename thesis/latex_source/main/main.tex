@@ -115,7 +115,10 @@ This second laptop is the host for the virtual BBU that runs in a docker contain
 Then the decoded signal gets processed. In case a response is requested, a response signal is generated and sent as I/Q samples back to the RRH.
 From the it gets transmitted back to the arduino.
 \subsection{Containerization and Orchestration}
-docker docker compose, ready for cran as service openstack
+Containerization is done with Docker. Docker containers are more lightweight than full virtual machines.
+Docker also has a command line tool for container orchestration, called Docker compose. With compose, container configuration is stored in docker-compose.yaml files.
+In such a file multiple container configurations can be specified and with a single command i.e docker-compose up, all containers defined in that file start up.
+Docker compose also lets the user scale services by spawning new containers on demand.
 \subsection{RRH and BBU}
 The RRH is the simplest component. It has an antenna for input and one for output. In Figure~\ref{fig:seq_diagram} the RRH is composed by the two 
 components "SDR RX" and "SDR TX". They correspond to the physical RX and TX slots ond the SDR device. The BBU is the "Lora Decoder" component. It runs 
@@ -588,4 +591,88 @@ With a Netem delay of 400 ms, the decoded message arrives about 3 seconds later,
 
 
 \chapter{LoRa Tools}
+\label{chap:lora_tools}
+\section{Getting a Downlink signal}
+With the Arduino we could generate raw LorRa signal, record them with the SDR and save them to a file for inspection.
+However, getting a downlink signal was not that straightforward. 
+In this section, three methods of getting a downlink signal are presented that were tried.
+The last method is clearly the winner.
+
+\begin{enumerate}
+    \item Schedule a downlink over TTN
+    \item Manipulate the packet forwarder of and schedule a downlink over TTN
+    \item Manipulate the packet forwarder of the gateway in the private LorRa network.
+\end{enumerate}
+
+First idea was to connect the gateway to TTN. 
+The Arduino LMIC library provides the LoRaWAN implementation for communicating with a LoRaWAN server like TNN.
+After setting up the gateway and Arduino for TTN correctly, the gateways is visible in the TTN dashboard as well as 
+the messages that the Arduino sends. Then, in the TTN dashboard a downlink can be scheduled for when the next uplink message 
+is received. There are two issues with this method. First, the downlink message will be a LoRaWAN packet. That means when a 3 byte message "ACK"
+is sent downlink, the actual signal has all the LoRaWAN fields, as shown in~\ref{fig:lora_wan_struct}, and is encrypted with an AES (Advanced Encryption Standard).
+The raw LorRa packet thus has then a length of around 20 bytes.\\
+Second, the gateway is free so send the downlink on any valid LoRaWAN frequency with any valid SF it deems reasonable. To get the signal on the desired frequency and SF 
+multiple downlinks have to be scheduled one has to wait for the network server to cycle to the next frequency for each new downlink. 
+\\
+\\
+Second, to avoid the varying frequencies and SF, the gateway can be manipulated to send exactly what we want by modifying the source code 
+and recompiling.
+Changes have to bee done to this file: \url{https://github.com/TheThingsNetwork/packet_forwarder/blob/legacy/poly_pkt_fwd/src/poly_pkt_fwd.c}.
+Listing~\ref{lst:polypkt} shows the following necessary changes:
+\begin{itemize}
+    \item Set the frequency to 8685000000 instead of letting the server decide
+    \item In any case set the SF to 12
+    \item Override the packet size to 3
+    \item Copy the desired payload into the downlink packet payload i.e. "ACK"
+\end{itemize}
+
+\begin{listing}[h]
+    \begin{minted}[frame=single,linenos=false,breaklines]{c++}
+void thread_down(void* pic) {
+    ...
+    //txpkt.freq_hz = (uint32_t)((double)(1.0e6) * json_value_get_number(val));
+    txpkt.freq_hz = 868500000;
+    ...
+    switch (x0) {
+            // case  7: txpkt.datarate = DR_LORA_SF7;  break;
+            // case  8: txpkt.datarate = DR_LORA_SF8;  break;
+            // case  9: txpkt.datarate = DR_LORA_SF9;  break;
+            // case 10: txpkt.datarate = DR_LORA_SF10; break;
+            // case 11: txpkt.datarate = DR_LORA_SF11; break;
+            // case 12: txpkt.datarate = DR_LORA_SF12; break;
+            
+            case  7: txpkt.datarate =  DR_LORA_SF12;  break;
+            case  8: txpkt.datarate =  DR_LORA_SF12;  break;
+            case  9: txpkt.datarate =  DR_LORA_SF12;  break;
+            case 10: txpkt.datarate =  DR_LORA_SF12; break;
+            case 11: txpkt.datarate =  DR_LORA_SF12; break;
+            case 12: txpkt.datarate =  DR_LORA_SF12; break;
+            ... 
+    }
+    ...
+    // txpkt.size = (uint16_t)json_value_get_number(val);
+    txpkt.size = 3
+    ... 
+    // i = b64_to_bin(str, strlen(str), txpkt.payload, sizeof txpkt.payload);
+    memcpy(txpkt.payload, "ACK", 3);
+    i = 3;
+    ...
+           
+
+        \end{minted}
+        \caption{Changes to the polypacket forwarder}
+        \label{lst:polypkt}
+\end{listing}
+
+This already gives significantly more control and convenience than the first approach. Though, there are two other issues that have to be addressed.
+First, there is no guarantee that TTN decides to send the downlink over your manipulated gateway. The TTN network server could decide to send the message over another gateway close enough to
+your end-device. In this case the downlink message would not get modified.
+\\
+Second, your gateway is essentially a trap for the other TTN users. If their downlinks get sent over this manipulated gateway, 
+the payload their end-devices receive is modified one. The end devices will probably just drop the packet as 
+it is not LoRaWAN conform anymore and also not signed with their key. Nevertheless, this modified gateway is a disruptive factor 
+to the TTN network thus this approach should be avoided.
+
+
+
 

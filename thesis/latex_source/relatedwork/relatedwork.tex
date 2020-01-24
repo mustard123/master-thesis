@@ -242,6 +242,11 @@ do not have a CRC after the payload as shown in Figure\ref{fig:downlink_struct}.
     \label{fig:downlink_struct}
 \end{figure}
 
+The 10 preamble chirps that are up chirps in an uplink signal are now down chirps.
+The 2 start of frame delimiter chirps that are down chirps in an  uplink signal are now up chirps.
+The question remains if the data chirps are flipped as well. In fact, the data chirps are flipped as well 
+as we have discovered. This will be described more in chapter~\ref{chap:lora_tools}.
+
 
 \chapter{LoRa in SDRs}
 Software-defined radios (SDR) implement components that are usually implemented in hardware.
