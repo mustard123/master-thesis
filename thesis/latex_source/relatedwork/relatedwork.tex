@@ -86,7 +86,7 @@ There are three classes of end-devices. The following description is adapted fro
 A LoRa signal is a series of so called chirps as LoRa is derived from the Chirp Spread Spectrum modulation (CSS) technique. 
 There are up-chirps and down-chirps. In CSS chirps are deliberately spread across the available bandwidth. Up-chirps go from low frequency 
 to high frequency and down-chirps go from high frequency to low frequency. In Europe the LoRaWAN bandwidth for is 125 kHz. Assuming a center
-frequency of 868.5 MHz, which is in the european ISM band, a full up-chirp, so called sweep, would go from 868.4375 MHz to 868.5625 MHz.
+frequency of 868.5 MHz, which is in the European ISM band, a full up-chirp, so called sweep, would go from 868.4375 MHz to 868.5625 MHz.
 
 \begin{figure}[h]
     \centering
@@ -201,8 +201,7 @@ With:
 As Figure~\ref{fig:packet_struct} shows, the header is always encoded with the highest coding rate, $CR=4$.
 This is because the header contains crucial information such as the packet length.
 
-Figure \ref{fig:uplink_struct} and Figure \ref{fig:downlink_struct} show the structure of an uplink resp. a 
-downlink packet. There is no CRC in downlink packets. PHDR stands for PHY header.
+Figure \ref{fig:uplink_struct} shows the structure of an uplink packet. PHDR stands for PHY header.
 Those are "raw" LoRa packets. LoRaWAN packets have additional fields such as MAC header (MHDR) and 
 frame header (FHDR). Those are all in PHY payload of the "raw LoRa" packet as Figure~\ref{fig:lora_wan_struct} 
 shows.   
@@ -213,12 +212,6 @@ shows.
     \label{fig:uplink_struct}
 \end{figure}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/downlink_struct.png}
-    \caption{LoRa downlink packet structure~\cite{lora_wan_spec}}
-    \label{fig:downlink_struct}
-\end{figure}
 
 \begin{figure}[h]
     \centering
@@ -226,6 +219,29 @@ shows.
     \caption{LoRaWAN packet~\cite{lora_wan_spec}}
     \label{fig:lora_wan_struct}
 \end{figure}
+
+\section{LoRa signal (downlink)}
+LoRa downlinks signals are the inverse of an uplink signal. 
+This lets end devices or gateways easily differentiate between uplink and downlink.
+An Arduino end device can then ignore all uplinks signals as it will only ever expect a downlink signal it may need to process.
+Gateways on the other hand can ignore downlink signals as they are only interested in uplink signals.
+Figure~\ref{fig:lora_down_sig} shows a downlink signal with SF 12 and coding rate 4/5 sent from LoRa gateway. It encodes the payload "ACK".
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/down_ack_sf_12_cr_4_5.png}
+    \caption{LoRaWAN packet~\cite{lora_wan_spec}}
+    \label{fig:lora_down_sig}
+\end{figure}
+A difference is that downlinks signals 
+do not have a CRC after the payload as shown in Figure\ref{fig:downlink_struct}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/downlink_struct.png}
+    \caption{LoRa downlink packet structure~\cite{lora_wan_spec}}
+    \label{fig:downlink_struct}
+\end{figure}
+
 
 \chapter{LoRa in SDRs}
 Software-defined radios (SDR) implement components that are usually implemented in hardware.
@@ -242,7 +258,7 @@ There are three existing implmentations we looked at:
 
 We tried Blum's implementation in the Pothos  first. The Pothos projects is an open source data-flow framework
 supporting SoapySDR, a general framework for supporting SDR devices~\cite{pothos}.
-Unfortunately the LoRa modem demo application did not work for at all. After spending a few unsuccessful days 
+Unfortunately the LoRa modem demo application did not work for us at all. After spending a few unsuccessful days 
 trying to get to the issue we moved to Knight's application.
 
 Matt Knight held a great talk on reverse engineering LoRa at the GNU Radio conference 2016 \url{https://www.youtube.com/watch?v=-YNMRZC6v1s}.
@@ -297,7 +313,7 @@ in the way it is described.
 complete lie, see Knight~\cite{knight_youtube}. 
 The data is encoded before it is sent over the air to make it more resistant against interference.
 Thus after demodulating the signal with a Fourier Transform, the data has to be decoded to make it usable.
-Semtech's european patent hints at the following four steps:
+Semtech's European patent hints at the following four steps:
 \begin{enumerate}
     \item Symbol gray indexing. This adds error tolerance
     \item Data whitening. This induces randomness.

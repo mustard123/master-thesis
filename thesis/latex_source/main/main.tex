@@ -386,23 +386,26 @@ a sufficient sampling rate $f_{s}$ for a signal with bandwidth $B$ is given by:
     $f_{s} > 2*B$  
 \end{center}
 
-The signal bandwidth of the LoRa signal sent with the arduino is set to 125 kHz. Thus the minimum sampling frequency according to the formula above
+The signal bandwidth of the LoRa signal sent with the Arduino is set to 125 kHz. Thus the minimum sampling frequency according to the formula above
 is 250'000 samples per second which is a quarter of the previous sample rate of 1 million. This also quarters the network utilization from 8 MiB to 2 MiB, see Table~\ref{tabl:samprates}.
 Lowering the sampling rate below the Nyquist-Shannon limit results in the signal not getting successfully decoded.
+With the sample rate of 125'000 the maximum allowed signal bandwidth to reconstruct that signal is 62.5 kHz so the Arduino signal with 125 kHz bandwidth 
+cannot get decoded, see last line in the Table.
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{ |p{3cm}|p{3cm}|p{3cm}|p{3cm}| }
-        \hline
-        \multicolumn{4}{|c|}{Sample Rates and Network Utilization} \\
-        \hline
-        Samples per second & Max. Signal Bandwidth& Network Utilization & Decode Success in Experiment\\
-        \hline
+    \setlength{\tabcolsep}{22pt}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{cccc}
+        \toprule
+        Samples & Max. Signal & Network & Decode Success \\
+        per second & Bandwidth & Utilization & in Experiment\\
+        \midrule
         1'000'000  &500 kHz & 8 MiB/s    &yes\\
         500'000  &250 kHz & 4 MiB/s    &yes\\
         250'000&  125 kHz&  2 MiB/s  & yes\\
         125'000 & 62.5 kHz & 1 MiB/s & no\\
-        \hline
+        \bottomrule
        \end{tabular}
 \caption{Sampling rates and network utilization}
 \label{tabl:samprates}
@@ -582,37 +585,6 @@ For LoRaWAN class A devices this is 1 resp. 2 seconds after uplink.\\
 In this example the Arduino sends in an interval of 4 seconds which is more than enough time under good conditions.
 However if network delay and processign delays occurs, this changes.
 With a Netem delay of 400 ms, the decoded message arrives about 3 seconds later, which leaves only 1 second for the downlink to be sent.
-
-
-\begin{table}
-    \caption{Standard behaviour of the \texttt{S} column type.}
-    \label{tab:S:standard}
-    \centering
-    \begin{tabular}{S}
-    \toprule
-    {Some Values} \\
-    \midrule
-    2.3456 \\
-    34.2345 \\
-    -6.7835 \\
-    90.473 \\
-    5642.5 \\
-    1.2e3 \\
-    e4 \\
-    \bottomrule
-    \end{tabular}
-    \end{table}
-
-
-
-
-
-
-
-
-
-
-
 
 
 \chapter{LoRa Tools}
