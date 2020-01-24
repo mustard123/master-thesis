@@ -8,9 +8,13 @@ BBU component should be virtualized and run on general purpose hardware.
 A simple network server should process the uplink message and schedule a response if required. From this setup 
 basic network requirements can be derived and measured as well as costs estimated.
 
-\section{Methods}
+\section{Hardware}
+An Arduino Mega 2560 with the Dragion LoRa Shield v1.4 is the end device, see Figure~\ref{fig:ard}.
+A LimeSDR mini, Figure~\ref{fig:sdr}, serves as the receiver for the RRH.
+The Raspberry Pi, Figure~\ref{fig:rasp} with a LoRa hat was used for testing up -and downlink signals, but not for the experiment itself. 
+Its hat is the iC880A LoRaWAN concentrator for the 868MHz frequency.
 
-\begin{figure}
+\begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.25\textwidth}
      \includegraphics[width=1\textwidth]{figures/arduino.png}
@@ -30,14 +34,21 @@ basic network requirements can be derived and measured as well as costs estimate
      \label{fig:rasp}
     \end{subfigure}
     \caption{Hardware devices}
-   \end{figure}
-\subsection{Sending uplink signals}
+\end{figure}
+% getting a downlink signal
+% recording from thethingsnetwrok
+% recording from private networks
+% manipualting private gateway
+% offline generation of downlink signal see chapter
+
+\section{Sending Uplink Signals}
 Uplink signals are sent with an arduino device equipped with a LoRa shield. 
 The arduino is controlled with an adapted form of the IBM LoraMAC-in-C (LMIC) library, modified to run on arduino devices.
 Using this library we implemented a simple communication protocol where a queue of packets is sent out in an interval.
 See section~\ref{sec:comm_prot} for detailed information.
 % \url{https://github.com/matthijskooijman/arduino-lmic}.
-\subsection{RRH and BBU}
+
+\section{RRH and BBU}
 For splitting up the LoRa gateway's functionality we use two laptops. 
 One laptop has the LimeSDR mini plugged in and serves as the RRH. The other decodes the LoRa
 signal in software, processes the signal and also generates LoRa signals in software and sends those downlink I/Q samples back to the RRH.
@@ -52,25 +63,38 @@ Though, as a first workaround we set up a private LoRaWAN network, scheduled a d
 which are I/Q samples, to the RRH.
 
 
-\subsection{Network Tools}
+\section{Study Subjects}
+\subsection{Network Utilization}
 For measuring network traffic, the tool "bmon" is used which stands for bandwidth monitor.
 It estimates the bits per second on all available network interfaces, ingoing as well as outgoing. 
-For adding network delay we used the tool "netem" which stands for network emulator. With netem we can add a delay to the qdisc scheduler
-which controls the processing the IP packets sent over the ethernet network interface.
-Both tools can easily be install with the "apt" package manager for ubuntu.
+\subsection{Impact of Delay}
+Speed is essential for most communication systems.
+LoRaWAN specifies two receive windows for class A devices. One 1 second after transmission, and if not
+received in this window, another one 2 seconds after transmission.
+The protocol for this experiment is more lenient. After transmission, the device starts listening
+for at least 4 seconds before retransmitting the unacknowledged packet.
+\subsection{Network Delay}
+Using the command line tool \emph{netem}, which stands for network emulator, we introduce some delay between the RRH and the BBU.
+The command is: tc qdisc add dev \emph{interface\_name} root netem delay 200ms. In which \emph{interface\_name} is something like 
+eth0. 
+\\
+This instructs tc (traffic control) to modify the qdisc (queuing discipline) by 
+adding (add) a new rule to the device (dev) e.g. eth0 to modify the outbound traffic scheduler (root) using 
+the network emulator (netem) with a delay of 200ms~\cite{netem}.
+\\
+This setup can be easily seen an tested in action:
+\begin{itemize}
+    \item On the RRH add a delay of 8000ms
+    \item On the BBU, in a terminal, type \emph{nc -l 4040}
+    \item On the RRH, in a terminal, type \emph{nc <\emph{IP\_ADDRESS\_OF\_THE\_BBU}> 4040}
+\end{itemize}
 
-\subsection{Hardware}
-An Arduino Mega 2560 with the Dragion LoRa Shield v1.4 is the end device, see Figure~\ref{fig:ard}.
-A LimeSDR mini, Figure~\ref{fig:sdr}, serves as the receiver for the RRH.
-The Raspberry Pi, Figure~\ref{fig:rasp} with a LoRa hat was used for testing up -and downlink signals, but not for the experiment itself. 
-Its hat is the iC880A LoRaWAN concentrator for the 868MHz frequency.
-% getting a downlink signal
-% recording from thethingsnetwrok
-% recording from private networks
-% manipualting private gateway
-% offline generation of downlink signal see chapter
+On the RRH on the same terminal on, type a message and send with enter. It should should arrive on the BBU's terminal 
+after 8 seconds, which was the case. 
 
-
+\subsection{Processing Delay}
+Not only are network delays of importance, but also the processing time it takes for decoding incoming messages and scheduling downlink messages.
+In the python script that sends the downlink, a call to \emph{time.sleep()} can simulate longer processing times.
 
 \section{Architecture}
 \subsection{Overview}
@@ -91,7 +115,7 @@ This second laptop is the host for the virtual BBU that runs in a docker contain
 Then the decoded signal gets processed. In case a response is requested, a response signal is generated and sent as I/Q samples back to the RRH.
 From the it gets transmitted back to the arduino.
 \subsection{Containerization and Orchestration}
-docker docker compose, ready for cran as service openshift
+docker docker compose, ready for cran as service openstack
 \subsection{RRH and BBU}
 The RRH is the simplest component. It has an antenna for input and one for output. In Figure~\ref{fig:seq_diagram} the RRH is composed by the two 
 components "SDR RX" and "SDR TX". They correspond to the physical RX and TX slots ond the SDR device. The BBU is the "Lora Decoder" component. It runs 
@@ -173,7 +197,7 @@ Whenever "ACK" is in the message payload, the acknowledgement signal get streame
 The BBU and the network server run each in a container started with docker compose.
 
 
-\begin{listing}[H]
+\begin{listing}[h]
 \begin{minted}[frame=single,linenos=false]{python}
 import zmq
 import socket
@@ -209,7 +233,7 @@ the spreading factor, frequency and coding rate are set. The frequency is given 
 is set with a predefined enum from the LMIC library. Also, the initial job for the LMIC is initialized there, see 
 Listing~\ref{lst::ard_setup} last line.
 
-\begin{listing}[H]
+\begin{listing}[h]
     \begin{minted}[frame=single]{c++}
 void setup() {
   Serial.begin(9600);
@@ -244,7 +268,7 @@ If an "ACK" is present, the callback function is set to \emph{my\_txdone\_func},
 Finally, in line 16 in Listing\ref{lst::ard_mytx}, schedules itself to be run again after \emph{TX\_INTERVAL} which is 4 seconds.
 
 
-\begin{listing}[H]
+\begin{listing}[h]
     \begin{minted}[frame=single]{c++}
 #define TX_INTERVAL 4000
 
@@ -262,7 +286,7 @@ char *myPackets[numOfPackets] = {
 \end{listing}
 
 
-\begin{listing}[H]
+\begin{listing}[h]
     \begin{minted}[frame=single, linenos]{c++}
 static void my_tx_func(osjob_t *job) {
 if (currentPacketIndex < numOfPackets) {
@@ -302,7 +326,7 @@ Else, the \emph{currentPacketIndex} does not get incremented so the same packet 
 for transmission and the RX function gets called again.
 
 
-\begin{listing}[H]
+\begin{listing}[h]
     \begin{minted}[frame=single, linenos]{c++}
 static void my_rx_func(osjob_t *job)
 {
@@ -363,9 +387,10 @@ a sufficient sampling rate $f_{s}$ for a signal with bandwidth $B$ is given by:
 \end{center}
 
 The signal bandwidth of the LoRa signal sent with the arduino is set to 125 kHz. Thus the minimum sampling frequency according to the formula above
-is 250'000 samples per second which is a quarter of the previous sample rate of 1 million. This also quarters the network utilization from 8 MiB to 2 Mib, see Table~\ref{tabl:samprates}.
+is 250'000 samples per second which is a quarter of the previous sample rate of 1 million. This also quarters the network utilization from 8 MiB to 2 MiB, see Table~\ref{tabl:samprates}.
 Lowering the sampling rate below the Nyquist-Shannon limit results in the signal not getting successfully decoded.
-\begin{table}[H]
+
+\begin{table}[h]
     \centering
     \begin{tabular}{ |p{3cm}|p{3cm}|p{3cm}|p{3cm}| }
         \hline
@@ -376,7 +401,7 @@ Lowering the sampling rate below the Nyquist-Shannon limit results in the signal
         1'000'000  &500 kHz & 8 MiB/s    &yes\\
         500'000  &250 kHz & 4 MiB/s    &yes\\
         250'000&  125 kHz&  2 MiB/s  & yes\\
-        125'000 & 62.5 kHz & 1 MiB7s & no\\
+        125'000 & 62.5 kHz & 1 MiB/s & no\\
         \hline
        \end{tabular}
 \caption{Sampling rates and network utilization}
@@ -483,11 +508,55 @@ For a hobbyist that operates a single gateway it may not be useful as now he nee
 that is fast enough to do the decoding in software. Though, for an operator with multiple gateways, centralizing and virtualizing
 the decoding has similar benefits as a C-RAN for LTE.
 
-\subsection{Network Delay}
-Speed is essential for most communication systems.
-LoRaWAN specifies two receive windows for class A devices. One after 
+\subsection{Delays}
+Various network delays for the outgoing sample stream from the RRH to the BBU were set.
+Table~\ref{tabl:delay} summarizes the results.
+\\
+The higher the delay the less network utilization was measured with bmon. But only after delay,
+namely 300ms. Without delay, RX resp. TX on the ethernet ports of the RRH and BBU is 8 MiB/s.
+With a 800ms delay it is about 2.32 MiB/s. With a 400 ms delay it is 5.5 MiB/s. With a delay 
+of 300ms or less it bmon measured still 8 MiB/s.
 
 
+\begin{table}[h]
+    \centering
+    \setlength{\tabcolsep}{22pt}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{SScc}
+        \toprule 
+            {\multirow{2}{*}[-2pt]{Delay (ms)}} & {\multirow{2}{*}[-2pt]{Network Traffic (MiB/s)}} & \multicolumn{2}{c}{Decode Success}\\ \cmidrule{3-4}
+        
+           &&Single Signal & Multiple Signal \\
+            \midrule
+            0  & 8  & yes & yes \\
+            0  & 6.4 & yes & yes \\
+            0  & 2.1 & yes & yes \\
+            0  & 500 & yes & yes \\
+
+            \bottomrule
+    \end{tabular}
+    \caption{Effect of delay on network traffic on decode process}
+    \label{tabl:delay}
+\end{table}
+
+\begin{table}
+    \caption{Standard behaviour of the \texttt{S} column type.}
+    \label{tab:S:standard}
+    \centering
+    \begin{tabular}{S}
+    \toprule
+    {Some Values} \\
+    \midrule
+    2.3456 \\
+    34.2345 \\
+    -6.7835 \\
+    90.473 \\
+    5642.5 \\
+    1.2e3 \\
+    e4 \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
 
 
 
