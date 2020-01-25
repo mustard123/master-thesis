@@ -682,6 +682,19 @@ Now downlinks signals can be scheduled like in a TTN dashboard. The difference i
 as it is the only gateway registered in this local LoRaWAN network.
 
 \section{Generating a Downlink Signal in Software}
+Currently, the Python script in the LorRa C-RAN architecture sends a pre recorded downlink signal as a response to the uplink messages.
+This signal was obtained the way described above. Ideally, the downlink signal could be generated on demand in software, enabling dynamic 
+payload instead of the static pre recorded "ACK" signal.\\
+Robyns et al. decoder repository has branch called encoder which would send out a predefined packet (uplink) as many times as the GNU Radio scheduler 
+was able to handle. The packet log on the Raspberry Pi gateway showed the incoming messages, but the payload of each subsequent message was different 
+than the one before. The branch was in early development. There was most likely and error in the implementation that propagated with each call to GNU Radios schedular.
+So we took the code out of the GNU Radio and refactored this OOT module into a single c++ file that can be executed without GNU Radio. Is hereafter referred as encoder.
+Instead of streaming the I/Q samples out to the SDR's TX, the encoder simply writes the generated samples to a binary file.
+We then provided the file as input source to the SDR to stream out. Now the gateway showed the same payload for every signal received. 
+This means the modulation and encoding process is was deterministic for a given input and the issue was indeed with how it was implemented in the GNU Radio framework.
+
+
+
 
 
 
