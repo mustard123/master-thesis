@@ -691,7 +691,20 @@ than the one before. The branch was in early development. There was most likely 
 So we took the code out of the GNU Radio and refactored this OOT module into a single c++ file that can be executed without GNU Radio. Is hereafter referred as encoder.
 Instead of streaming the I/Q samples out to the SDR's TX, the encoder simply writes the generated samples to a binary file.
 We then provided the file as input source to the SDR to stream out. Now the gateway showed the same payload for every signal received. 
-This means the modulation and encoding process is was deterministic for a given input and the issue was indeed with how it was implemented in the GNU Radio framework.
+This means the modulation and encoding process is deterministic for a given input and the issue was indeed with how it was implemented in the GNU Radio framework.
+\\
+The encoder encodes up and down chirps. Up chirps for preamble, down chirps for start of frame delimiter and both up -and down chirps to encode the data.
+To get a downlink signal, we added a flag, and a bit of refactoring, that signals the \emph{transmit\_packet} function to flip all down chirps to up chirps and vice versa.
+This generated downlink signal then gets successfully received by the Arduino. 
+
+\section{Improving the Encoder and Chirp Visualization}
+Interestingly, the generate uplink signals by the encoder cannot be decoded 
+by the LorRa decoder block, but only by real hardware. According to the author, there are some artifacts
+at the symbol boundaries for which real hardware can compensate for but the software decoder cannot.
+This is explained in issue 48 on GitHub, \url{https://github.com/rpp0/gr-lora/issues/48}.
+
+
+
 
 
 
