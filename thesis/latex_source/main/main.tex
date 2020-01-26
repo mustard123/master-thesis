@@ -688,22 +688,94 @@ payload instead of the static pre recorded "ACK" signal.\\
 Robyns et al. decoder repository has branch called encoder which would send out a predefined packet (uplink) as many times as the GNU Radio scheduler 
 was able to handle. The packet log on the Raspberry Pi gateway showed the incoming messages, but the payload of each subsequent message was different 
 than the one before. The branch was in early development. There was most likely and error in the implementation that propagated with each call to GNU Radios schedular.
-So we took the code out of the GNU Radio and refactored this OOT module into a single c++ file that can be executed without GNU Radio. Is hereafter referred as encoder.
+So we took the code out of the GNU Radio and refactored this OOT module into a single c++ file that can be executed without GNU Radio. It is hereafter referred as encoder.
 Instead of streaming the I/Q samples out to the SDR's TX, the encoder simply writes the generated samples to a binary file.
 We then provided the file as input source to the SDR to stream out. Now the gateway showed the same payload for every signal received. 
 This means the modulation and encoding process is deterministic for a given input and the issue was indeed with how it was implemented in the GNU Radio framework.
 \\
-The encoder encodes up and down chirps. Up chirps for preamble, down chirps for start of frame delimiter and both up -and down chirps to encode the data.
+The encoder encodes up and down chirps. Full up chirps for preamble, full down chirps for start of frame delimiter and various length up chirps to encode the data.
 To get a downlink signal, we added a flag, and a bit of refactoring, that signals the \emph{transmit\_packet} function to flip all down chirps to up chirps and vice versa.
 This generated downlink signal then gets successfully received by the Arduino. 
 
-\section{Improving the Encoder and Chirp Visualization}
+\section{Improving the Encoder \& Chirp Visualization}
 Interestingly, the generate uplink signals by the encoder cannot be decoded 
 by the LorRa decoder block, but only by real hardware. According to the author, there are some artifacts
 at the symbol boundaries for which real hardware can compensate for but the software decoder cannot.
 This is explained in issue 48 on GitHub, \url{https://github.com/rpp0/gr-lora/issues/48}.
+\\
+To visualize the symbol values of the chirps, the LoRa decoder needs to be modified to save the symbol values at each sample to a file. This file can then be the input to 
+the Python visualization script.
+To make this process easier, we take the LorRa decoder functionality out of the GNU Radio and put it into a single c++ file.
+In GNU Radio the GNU Radio scheduler fed a number of input items in each call of the \emph{work()} function to the decoder and the decoder told the scheduler how many output items it produced with the \emph{consume\_each(int number\_of\_items)} function.
+The functions \emph{work} and \emph{consume\_each()} are GNU Radio framework functions we needed to emulate. See \url{https://wiki.gnuradio.org/index.php/BlocksCodingGuide#Basic_Block} for a basic example. \\
+To achieve this the \emph{work} function was replace with a while loop and the \emph{consume\_each} function with a pointer arithmetics.
+Listing~\ref{lst:gnu_sched} shows the relevant code snippets.
+
+\begin{listing}[h]
+    \begin{minted}[frame=single,linenos=false,breaklines]{c++}
+int main (){
+    ...
+    file_size = std::experimental::filesystem::file_size(abs_path);
+    uintmax_t total_samples = file_size / sizeof(gr_complex);
+
+    char buffer[BUFFER_SIZE];
+    std::ifstream fin(abs_path, std::ios::in | std::ios::binary);
+    fin.read(buffer, BUFFER_SIZE);
+    input = (gr_complex *)buffer;
+    while (read_samples < total_samples)
+    {
+        work(input);
+    }
+
+    ...
+}
+
+int work (gr_complex *&input){
+    ...
+    // consume_each(d_samples_per_symbol);
+    read_samples = read_samples + d_samples_per_symbol;
+    input = input + d_samples_per_symbol;
+    ...
+}
+
+bool demodulate () {
+    ... 
+    outfile << std::hex << word << ',' << std::dec << read_samples << std::endl;
+    ...
+}
+        \end{minted}
+        \caption{Emulate the GNU Radio schedular}
+        \label{lst:gnu_sched}
+\end{listing}
+
+In the programs main function the file with the I/Q samples is read into a buffer.
+While there are still samples left to read the work function is called.
+\\
+In the work function all calls to consume\_each are replaced by incrementing the read samples and
+moving the pointer forward by how many samples were consumed.\\
+Whenever the decoder calls the demodulate function, we print the value and at which sample it occurred to a csv file.\\
+This file and the I/Q sample file are the inputs to the visualization script which then produces a spectrogram chart. \\
+Figure~\ref{fig:123_ard} shows an uplink signal sent with the Arduino, Figure~\ref{fig:123_enc} the signal generated with the encoder.
+In the original implementation the number of bytes to transmit was set to match only the tespacket, we added the implementation of the formula in
+~\ref{sec:pkt_structure} to adjust the number of bytes to transmit dynamically.
+This fixed the issue that before, the signal from the encoder did not have 18 symbols like the signal from the Arduino.
+Now the number of symbols in the with the encoder generated signal corresponds to the number of symbols in the Arudino signal, however 
+the symbol values do not.
 
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/123_SF7_CR4_5_arduino.png}
+    \caption{123 SF 7, CR 4/5, sent with Arduino}
+    \label{fig:123_ard}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/123_SF7_CR4_5_from_encode_18_symbols.png}
+    \caption{123, SF 7, CR 4/5, sent generated with encoder}
+    \label{fig:123_enc}
+\end{figure}
 
 
 

@@ -175,7 +175,8 @@ that transmit with SF 12. This occupies the bandwidth for device that are farthe
 The network server detects that the nearby devices do not need a spreading factor of 12 and signal them to use 
 a lower SF such as SF 7 or SF 8. The ADR setting has to be enabled on the end-devices and can be disabled.
 
-\subsection{Packet structure}
+\subsection{Packet Structure}
+\label{sec:pkt_structure}
 The base form of a LoRa packet starts with the preamble, followed by the optional header with a header CRC, followed by the payload and finally the 
 payload CRC. The number of payload symbols is calculated by the following formula~\cite{SX_design_guide}:\\ \\
 $payloadSymbNb = 8 + max{(ceil(\frac{8PL-4SF+28+16-20H}{4(SF-2DE)})*(CR+4),0)}$ 
