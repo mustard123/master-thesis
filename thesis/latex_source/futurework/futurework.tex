@@ -33,8 +33,8 @@ necessary time and knowledge. The Arduino could already speak the LoRaWan protoc
 the help of the LMIC library which offers a fairly complete LoRaWan Class A device implementation.
 \\
 On network server side an initial improvement would be to dynamically generate the response signal
-by incorporating the encoder for downlink signals in the architecture.\\
-\\
+by incorporating the encoder for downlink signals in the architecture.
+\\ \\
 Further, there is only one decoder / BBU running because there is only one Arduino sending on one channel.
 As the BBU is containerized, the experiment can be run with multiple Arduino devices on different 
 channels and spreading factor. Witch Docker compose, multiple BBUs could be started to handle the different 
@@ -42,7 +42,7 @@ channels and spreading factor, they would then forward the decoded messages to t
 This can be already done with the current implementation. The network server however could be replaced 
 with the open implementation of the chirpstack network server, \url{https://www.chirpstack.io/network-server/overview/}. 
 It handles among other things the de-duplication of LoRaWan messages and downlink scheduling.
-It takes LoRaWan messages from an MQTT broker. So instead of the decoder sending the decoded messages 
+It takes LoRaWan messages from an MQTT broker. MQTT like ZMQ facilitates architectures based on a publish-subscribe strategy. So instead of the decoder sending the decoded messages 
 out over an UDP socket and our Python script subscribing, the decoder can publish the decoded message to the 
 MQTT broker. For downlink scheduling the chirpstack network server sends the message also over MQTT
 back to the gateway for modulation and transmission. For the C-RAN architecture where the downlink is modulated 
@@ -50,10 +50,16 @@ in software and not on the gateway anymore, this would need a redesign where the
 to transmit without having to do any LoRa modulation. Then the chirpstack application server could be 
 added for free givin a nice web-interface similar to the TTN interface, but instead of 
 traditional LoRaWan network architecture a C-RAN LoRaWan architecture is running.
-\\
+\\ \\
 For further developing the centralized / cloud aspect of C-RAN, the BBUs instead of running on a single host
 controlled by Docker compose could be spread of multiple machines with Docker swarm or Kubernetes. 
 Further down the road BBU and network server could be offered as a service via software such as Openstack 
 essentially providing C-RAN as a service as demonstrated for LTE by in~\cite{Nikaein2015}.
+\\ \\
+Finally, it needs to be investigated why the decoder cannot successfully decode I/Q samples of a single signal streamed over and ethernet connection as TCP/IP packets 
+if a network delay of more than 500ms is emulated on the connection. Also, there are some open issues on the 
+GitHub repo of the decoder and a few items that are not yet implemented such as multichannel decoding and 
+CRC checks for payload and header. However, the decoder itself is not scope of this thesis and is just mentioned here for 
+completeness.
 
 

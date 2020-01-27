@@ -1,2 +1,25 @@
 \chapter{Summary and Conclusions}
-
+Moving to a C-RAN approach for LoRaWAN networks is feasible. For this the
+the LoRa gateways functionality must be split up in a into a RRH and BBU component.
+It shows how the BBU part can be accomplished in software and the benefits it brings
+by containerizing and running it in a virtualized environment. Tradeoff for this 
+simplification of the LoRa gateway is the introduction of significant amount of data traffic between
+the RRH and the BBU component and a more complex architecture as the one gateway component is now 
+split into two components. This offers more flexibility and convenience in the long run but needs to 
+be managed and maintained nevertheless. Generally, C-RAN for LoRa brings much of the same advantages as 
+a C-RAN for LTE does in terms of CAPEX and OPEX. For at least class A devices, the LoRaWAN protocol allows for more leeway in 
+processing as receive windows for downlinks signals are open either 1 or 2 seconds after transmission.
+Data traffic between RRH and BBU can be reduced by applying the Nyquist-Shannon sampling theorem. 
+By reducing the sampling rate to only the minium needed network utilization between RRH and BBU 
+can be greatly reduced compared from worst to best case.\\
+There is only one implementation for software defined LoRa decoding that worked for us but it is fairly completed.
+However the modulation of an uplink signal is still in the early stages. We extended the modulation by 
+implementing the modulation of a downlink signal though but the correctness and sophistication is strictly tied to 
+the uplink modulation implementation as the downlink signals is essentially the inverse of an uplink signal in terms of 
+chirp direction.
+\\
+Having also modulation of signals defined in software, not only the decoding, would make prototyping and simulation
+of network conditions much simpler. The difficulty lies in the fact that the LoRa PHY is proprietary which is why reverse 
+engineering it is so hard. Having said that, as there already exists a functioning decoder, an encoder should not be that far 
+away. We contribute some tools we developed during to this thesis such as the downlink modulator and chirp visualizer that could
+possibly help for further development. 

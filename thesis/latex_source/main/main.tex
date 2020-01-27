@@ -588,6 +588,8 @@ For LoRaWAN class A devices this is 1 resp. 2 seconds after uplink.\\
 In this example the Arduino sends in an interval of 4 seconds which is more than enough time under good conditions.
 However if network delay and processign delays occurs, this changes.
 With a Netem delay of 400 ms, the decoded message arrives about 3 seconds later, which leaves only 1 second for the downlink to be sent.
+Comparing this to LTE where the requirements impose an upper-bound of less than 3 ms
+for TX/RX processing~\cite{Nikaein2015}, LoRaWAN, at least for Class A devices, offers much more leeway.
 
 
 \chapter{LoRa Tools}
