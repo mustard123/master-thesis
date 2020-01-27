@@ -57,44 +57,11 @@ The processes on the second laptop run in virtualized environment with docker, m
 The LoRa OOT module by Robyns et al. has a branch called "encoder" where they began the implementation of modulating an uplink LoRa signal in software.
 It is able to generate a specific test packet but the modulated signal has errors as we saw when we inspected the data payload on the LoRa gateway.
 Having an uplink signal generator was a nice starting point, but we needed something to generate downlink signal. In the end we extended the existing implementation
-by adding a downlink signal generation ability, see section~\ref{todo}.
+by adding a downlink signal generation ability, see section~\ref{chap:lora_tools}.
 \\
 Though, as a first workaround we set up a private LoRaWAN network, scheduled a downlink, and recorded it to a file. Now we can stream that file as a response by streaming its content,
 which are I/Q samples, to the RRH.
 
-
-\section{Study Subjects}
-\subsection{Network Utilization}
-For measuring network traffic, the tool "bmon" is used which stands for bandwidth monitor.
-It estimates the bits per second on all available network interfaces, ingoing as well as outgoing. 
-\subsection{Impact of Delay}
-Speed is essential for most communication systems.
-LoRaWAN specifies two receive windows for class A devices. One 1 second after transmission, and if not
-received in this window, another one 2 seconds after transmission.
-The protocol for this experiment is more lenient. After transmission, the device starts listening
-for at least 4 seconds before retransmitting the unacknowledged packet.
-\subsection{Network Delay}
-Using the command line tool \emph{netem}, which stands for network emulator, we introduce some delay between the RRH and the BBU.
-The command is: tc qdisc add dev \emph{interface\_name} root netem delay 200ms. In which \emph{interface\_name} is something like 
-eth0. 
-\\
-This instructs tc (traffic control) to modify the qdisc (queuing discipline) by 
-adding (add) a new rule to the device (dev) e.g. eth0 to modify the outbound traffic scheduler (root) using 
-the network emulator (netem) with a delay of 200ms~\cite{netem}.
-\\
-This setup can be easily seen an tested in action:
-\begin{itemize}
-    \item On the RRH add a delay of 8000ms
-    \item On the BBU, in a terminal, type \emph{nc -l 4040}
-    \item On the RRH, in a terminal, type \emph{nc <\emph{IP\_ADDRESS\_OF\_THE\_BBU}> 4040}
-\end{itemize}
-
-On the RRH on the same terminal on, type a message and send with enter. It should should arrive on the BBU's terminal 
-after 8 seconds, which was the case. 
-
-\subsection{Processing Delay}
-Not only are network delays of importance, but also the processing time it takes for decoding incoming messages and scheduling downlink messages.
-In the python script that sends the downlink, a call to \emph{time.sleep()} can simulate longer processing times.
 
 \section{Architecture}
 \subsection{Overview}
@@ -357,6 +324,40 @@ static void my_rx_func(osjob_t *job)
     \caption{RX function that checks for the response or reschedules the packet transmission}
     \label{lst::ard_myrx}
 \end{listing}
+
+\section{Study Subjects}
+\subsection{Network Utilization}
+For measuring network traffic, the tool "bmon" is used which stands for bandwidth monitor.
+It estimates the bits per second on all available network interfaces, ingoing as well as outgoing. 
+\subsection{Impact of Delay}
+Speed is essential for most communication systems.
+LoRaWAN specifies two receive windows for class A devices. One 1 second after transmission, and if not
+received in this window, another one 2 seconds after transmission.
+The protocol for this experiment is more lenient. After transmission, the device starts listening
+for at least 4 seconds before retransmitting the unacknowledged packet.
+\subsection{Network Delay}
+Using the command line tool \emph{netem}, which stands for network emulator, we introduce some delay between the RRH and the BBU.
+The command is: tc qdisc add dev \emph{interface\_name} root netem delay 200ms. In which \emph{interface\_name} is something like 
+eth0. 
+\\
+This instructs tc (traffic control) to modify the qdisc (queuing discipline) by 
+adding (add) a new rule to the device (dev) e.g. eth0 to modify the outbound traffic scheduler (root) using 
+the network emulator (netem) with a delay of 200ms~\cite{netem}.
+\\
+This setup can be easily seen an tested in action:
+\begin{itemize}
+    \item On the RRH add a delay of 8000ms
+    \item On the BBU, in a terminal, type \emph{nc -l 4040}
+    \item On the RRH, in a terminal, type \emph{nc <\emph{IP\_ADDRESS\_OF\_THE\_BBU}> 4040}
+\end{itemize}
+
+On the RRH on the same terminal on, type a message and send with enter. It should should arrive on the BBU's terminal 
+after 8 seconds, which was the case. 
+
+\subsection{Processing Delay}
+Not only are network delays of importance, but also the processing time it takes for decoding incoming messages and scheduling downlink messages.
+In the python script that sends the downlink, a call to \emph{time.sleep()} can simulate longer processing times.
+
 
 \section{Results}
 \subsection{Network Utilization}

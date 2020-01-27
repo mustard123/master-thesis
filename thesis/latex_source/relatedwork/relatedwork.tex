@@ -1,4 +1,5 @@
 \chapter{LoRa and LoRaWAN}
+\label{chap:lora_and_lorawan}
 LoRa is a modulation technique derived from chirp
 spread spectrum technology\cite{what_is_lora}. 
 Originally developed by Cycleo, a french company, LoRa has been acquired by Semtech~\cite{limits_lora}.
@@ -301,7 +302,7 @@ installation and usage guide. A docker environment is also provided for testing 
 decoding of a LoRa signal, which is a big plus. Unlike Knight's implementation, this module
 has demodulation, decoding and channelization all in one single block as shown in Figure~\ref{fig:robyns_gnu}. 
 The module has been tested with various SDR devices but not with the LimeSDR mini. Nevertheless it worked
-well for us and we based the CRAN implementation for LoRa on this module.
+well for us and we based the C-RAN implementation for LoRa on this module.
 
 \begin{figure}[h]
     \centering
@@ -339,6 +340,7 @@ At the time of Knight's talk, he did not decode the header. Robyns implementatio
 as well as decoding multiple channels simultaneously. 
 
 \chapter{C-RAN in cellular networks}
+\label{chap:cran_in_cellular}
 A Radio Access Network (RAN) provides the connection between and end-device e.g. a mobile phone and the core network e.g network of the telecom provider.
 A RAN provides access and manages resources across the radio sites. It is a major component in telecommunications. RAN components include a base station and antennas
 that cover a specific region. The base stations connect to the core network~\cite{what_is_ran}.
