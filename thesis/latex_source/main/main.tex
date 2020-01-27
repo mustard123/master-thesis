@@ -9,7 +9,7 @@ A simple network server should process the uplink message and schedule a respons
 basic network requirements can be derived and measured as well as costs estimated.
 
 \section{Hardware}
-An Arduino Mega 2560 with the Dragion LoRa Shield v1.4 is the end device, see Figure~\ref{fig:ard}.
+An Arduino Mega 2560 with the Dragion LoRa Shield v1.4 is the end-device, see Figure~\ref{fig:ard}.
 A LimeSDR mini, Figure~\ref{fig:sdr}, serves as the receiver for the RRH.
 The Raspberry Pi, Figure~\ref{fig:rasp} with a LoRa hat was used for testing up -and downlink signals, but not for the experiment itself. 
 Its hat is the iC880A LoRaWAN concentrator for the 868MHz frequency.
@@ -503,11 +503,11 @@ has to be calculated:
 
 This yield the following $28800 * 7~Bytes = 0.0002016 GB$, which is an insignificant daily amount for AWS as
 it gives already 0\$ as cost estimation before we even apply the 30\% usage assumptions.
-Thus, sending the I/Q samples over the internet to the cloud is infinitely more expensive compared to just 
+Thus, sending the I/Q samples over the Internet to the cloud is infinitely more expensive compared to just 
 sending the demodulated signal. 
 \\
 However, in a local cloud setup where RRH and BBU are on the same network
-or in a network architecture the data does not have to be routed over the internet and 
+or in a network architecture the data does not have to be routed over the Internet and 
 the BBU can still be virtualized and centralized in a BBU hotel for much cheaper.
 In such a setup hardware and operational costs can be saved as outlined in section~\ref{sec:moving_to_cran}.
 For each gateway at least 130\$ costs for the LoRa concentrator could be saved by doing its job in software.
@@ -672,7 +672,7 @@ First, there is no guarantee that TTN decides to send the downlink over your man
 your end-device. In this case the downlink message would not get modified.
 \\
 Second, your gateway is essentially a trap for the other TTN users. If their downlinks get sent over this manipulated gateway, 
-the payload their end-devices receive is modified one. The end devices will probably just drop the packet as 
+the payload their end-devices receive is modified one. The end-devices will probably just drop the packet as 
 it is not LoRaWAN conform anymore and also not signed with their key. Nevertheless, this modified gateway is a disruptive factor 
 to the TTN network thus this approach should be avoided.
 \\

@@ -23,7 +23,7 @@ The TTN network for example is used for cattle tracking, smart irrigation as wel
 Figure~\ref{fig:lora_context} shows LoRa compared two other wireless technologies, Wi-Fi and cellular. Both Wi-Fi and cellular
 are high in bandwidth with cellular having a longer range than Wi-Fi. They both have a much higher power consumption compared to LoRa.
 LoRa has lower bandwidth but a high range. In a experiment during a TTN conference LoRa signals from a low orbit satellite were received~\cite{loa_satellite}.
-On the other hand, as LoRa is designed for long range and low power, only few bytes are transmitted per day while Wi-Fi and cellular are capable of video streaming.
+On the other hand, as LoRa is designed for long-range and low power, only few bytes are transmitted per day while Wi-Fi and cellular are capable of video streaming.
 In urban areas LoRa has a range of 2-5 km and 15 km in suburban areas~\cite{limits_lora}.\\
 LoRaWAN is not the same all around the world. There are regional parameters that come into play, one is for example the frequency band.
 In Europe LoRaWAN operates on the in the 863-870MHz and 433MHz ISM band and in North America the 902-928MHz ISM band. Also channel bandwidth and maximum transmission 
@@ -47,9 +47,9 @@ end-nodes which will be described in the next section.
 
 As depicted in Figure~\ref{fig:lorawan_network}, the packets sent by end-devices (on the far left) such as alarms, tracking devices and monitoring devices,
 can be received by multiple gateways. As the end-nodes are not linked to a particular gateway, the can be moved freely which is an important requirement for 
-assets tracking.\\
+asset tracking.\\
 The Figure also shows how security is built into LoRaWAN. The payload is end-to-end encrypted from the end-nodes to the applications server.
-A unique 128-bit network session key is shared between  the end-device and the network server and 
+A unique 128-bit network session key is shared between the end-device and the network server and 
 another 128-bit application session key is shared end-to-end at the application level~\cite{about_lora_wan}.
 With those measures LoRaWAN prevents eavesdropping. Spoofing is prevented by a MIC (Message Integrity Code)
 in the MAC payload, and replay attacks are prevent by utilizing frame counters~\cite{lora_security}.
@@ -86,7 +86,7 @@ There are three classes of end-devices. The following description is adapted fro
 \subsection{Chirps}
 A LoRa signal is a series of so called chirps as LoRa is derived from the Chirp Spread Spectrum modulation (CSS) technique. 
 There are up-chirps and down-chirps. In CSS chirps are deliberately spread across the available bandwidth. Up-chirps go from low frequency 
-to high frequency and down-chirps go from high frequency to low frequency. In Europe the LoRaWAN bandwidth for is 125 kHz. Assuming a center
+to high frequency and down-chirps go from high frequency to low frequency. In Europe the LoRaWAN signal bandwidth is 125 kHz. Assuming a center
 frequency of 868.5 MHz, which is in the European ISM band, a full up-chirp, so called sweep, would go from 868.4375 MHz to 868.5625 MHz.
 
 \begin{figure}[h]
@@ -153,7 +153,7 @@ On the other hand, the higher the CR the more bits need to be transmitted which 
 The longer the packet, the longer the transmission time. LoRa packets can be shortened
 by sending packets with implicit header mode where the
 no header is sent and the settings that would have been specified in the header have to be 
-predefined manually on the end device.\\
+predefined manually on the end-device.\\
 Assuming constant packet size and same bandwidth, varying the spreading factor increases resp. decreases the time on air.
 The higher the SF, the longer the time on air. Higher SF means longer range. The spreading factor goes from 7 to 12. SF 7 has 
 the shortest range, SF 12 the longest. The spreading factor essentially sets the duration of a chirp, a full sweep~\cite{exploratory_eng}.
@@ -224,8 +224,8 @@ shows.
 
 \section{LoRa signal (downlink)}
 LoRa downlinks signals are the inverse of an uplink signal. 
-This lets end devices or gateways easily differentiate between uplink and downlink.
-An Arduino end device can then ignore all uplinks signals as it will only ever expect a downlink signal it may need to process.
+This lets end-devices or gateways easily differentiate between uplink and downlink.
+An Arduino end-device can then ignore all uplinks signals as it will only ever expect a downlink signal it may need to process.
 Gateways on the other hand can ignore downlink signals as they are only interested in uplink signals.
 Figure~\ref{fig:lora_down_sig} shows a downlink signal with SF 12 and coding rate 4/5 sent from LoRa gateway. It encodes the payload "ACK".
 \begin{figure}[h]
