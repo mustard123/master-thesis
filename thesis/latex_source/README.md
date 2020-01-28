@@ -1,11 +1,11 @@
 # C-RAN for LoRa
 
-An arduino with a LoRa shield sends out packets over the air in an interval.
-Some packets require an acknowledgment (ACK). If an ACK is required, the arduino waits for a certain amount of time for the ACK. If the ACK arrives in time, the arduino starts transmitting the next packet. If not, the arduino will resend the packet and again wait for the ACK.
+An Arduino with a LoRa shield sends out packets over the air in an interval.
+Some packets require an acknowledgment (ACK). If an ACK is required, the Arduino waits for a certain amount of time for the ACK. If the ACK arrives in time, the Arduino starts transmitting the next packet. If not, the Arduino will resend the packet and again wait for the ACK.
 
 The RRH (Remote Radio Head) receives radio waves with a LimeSDR. The RRH streams the IQ samples over the network the the BBU (Base Band Unit).
 
-The BBU decodes the message. If the message says it require and ACK, the BBU send out IQ samples of the ACK message over the network to the RRH which transmits them back over the air to the arduino.
+The BBU decodes the message. If the message says it require and ACK, the BBU send out IQ samples of the ACK message over the network to the RRH which transmits them back over the air to the Arduino.
 
 ## Run with Docker
 
@@ -207,16 +207,16 @@ services:
 
 **The arduino-lmic library is required [Instructions here](https://github.com/matthijskooijman/arduino-lmic)**
 
-1. Go to the arduino directory. 
-2. Compile and upload the code to the arduino
-3. The arduino runs the protocol in the manner described at the beginning.
+1. Go to the Arduino directory. 
+2. Compile and upload the code to the Arduino
+3. The Arduino runs the protocol in the manner described at the beginning.
 4. It send packets with SF9 and expects the ACK response to be SF12 as well.
-5. After 3 packets the arduino has finished.
+5. After 3 packets the Arduino has finished.
 6. Look at the Serial output for details. Baud rate 9600
 
 **Info**
 
-PlatformIO was used to compile and upload the image to the arduino.
+PlatformIO was used to compile and upload the image to the Arduino.
 
 -------
 
