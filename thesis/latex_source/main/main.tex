@@ -701,7 +701,7 @@ We then provided the file as input source to the SDR to stream out. Now the gate
 This means the modulation and encoding process is deterministic for a given input and the issue was indeed with how it was implemented in the GNU Radio framework.
 \\
 The encoder encodes up and down chirps. Full up chirps for preamble, full down chirps for start of frame delimiter and various length up chirps to encode the data.
-To get a downlink signal, we added a flag, and a bit of refactoring, that signals the \emph{transmit\_packet} function to flip all down chirps to up chirps and vice versa.
+To get a downlink signal we added a flag, and a bit of refactoring, that signals the \emph{transmit\_packet} function to flip all down chirps to up chirps and vice versa.
 This generated downlink signal then gets successfully received by the Arduino. 
 
 \section{Improving the Encoder \& Chirp Visualization}
