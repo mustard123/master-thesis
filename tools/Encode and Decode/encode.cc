@@ -196,25 +196,6 @@ uint16_t d_num_preamble_symbols;
 double d_chirp_phi0;
 std::vector<gr_complex> d_sample_buffer;
 
-/*
-return number of symbols for header and payload with crc
-param pl: payload_length in bytes paylaod withou header or crc
-param sf: spreading factor 7<=x<=12
-param cr: coding rate, from 1 to 4, ratio = 4 / (4+CR)
-param implicit_header: set false, our tespackets have explicit header
-param DE: Data rate optimization Enabled, false four our testpackets
-*/
-uint32_t calc_num_of_symbols(uint32_t pl, uint8_t sf, uint8_t cr ,bool implicit_header, bool DE) {
-
-    double dividend = 8.0*pl-4*sf + 28+16 -20 * implicit_header;
-    double divisor = 4.0*(sf - 2.0* DE);
-
-
-    uint32_t n = (uint32_t) 8+std::max(std::ceil( dividend / divisor) * (cr + 4.0), 0.0);
-    return n;
-
-}
-
 
 
 bool parse_packet_conf(loraconf_t &conf, uint8_t *packet, uint32_t packet_len)
@@ -334,19 +315,51 @@ inline void whiten(uint8_t* input, const uint8_t* sequence, uint32_t length) {
             for(uint32_t i = 0; i < length; i++) {
                 input[i] = input[i] ^ sequence[i];
             }
-        }
+}
+
+
+uint32_t calc_num_of_symbols(uint32_t pl, uint8_t sf, uint8_t cr ,bool implicit_header, bool DE) {
+
+    double dividend = 8.0*pl-4*sf + 28+16 -20 * implicit_header;
+    double divisor = 4.0*(sf - 2.0* DE);
+
+
+    uint32_t n = (uint32_t) 8+std::max(std::ceil( dividend / divisor) * (cr + 4.0), 0.0);
+    return n;
+
+}
 
 void transmit_packet(loraconf_t& conf, uint8_t* packet, bool up = true) { // TODO: clean up
-        //header plus payload plus crc
+
+        // START
+        /*
+        INFO: This is my (Silas Weber) addition. Calculating the num_symbols with my calc_num_of_symbols method and calculating
+        num_bytes based on the num_symbols fixes the CRC error for the original testpacket. Also I added +2 for packet_length 
+        because the original implementation seems to have forgotten to include it.
+
+        This calculates the correct number of symbols for any packet not only the test packet, but changing the length in the header of
+        the original test packet make the signal not appear on the gateway. There must be something special to the original test packet as it is
+        the only one that gets received on the gateway (uplink), or if flipped, on the Arduino (downlink)
+        */
+
+       //header plus payload plus crc
         uint32_t packet_length = sizeof(loratap_header_t) + conf.phy.length + 2;
         uint32_t num_symbols = calc_num_of_symbols(conf.phy.length, conf.tap.channel.sf, conf.phy.cr, false, false);
 
         // each symbols holds sf bits
         uint32_t num_bytes = (uint32_t) std::ceil((num_symbols*conf.tap.channel.sf) / 8.0);
-        
+
+        // END
+
+
+
         uint8_t encoded[num_bytes];
         uint32_t encoded_offset = 0;
         uint32_t packet_offset = 0;
+
+
+        
+       
 
         std::cout <<"phy length: " <<(int) conf.phy.length << std::endl;
         std::cout <<"phy header len: " <<(int) sizeof(loraphy_header_t) << std::endl;
@@ -435,18 +448,16 @@ int main()
 
 
     // Temporary         ve  pa      le              fq  bw  sf  pr  mr  cr  sn  sy  H1  H1  H1
-    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x17\x91\xa0\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\xb8\x73";
-    
+        char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x17\x91\xa0\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\xb8\x73";
+
     //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2";
-
-
     // Header + Goodbye! + CRC,  (08 30 00 47 6f 6f 64 62 79 65 21 3f e4) i.e what the lora_receiver has decoded from the arduino raw uplink
     //                            le H2 H3 G  o  o  d  b   y  e  ! (CRC ) le is correctly 8 i.e Goodbye! has 8 characters
-    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x09\x00\x00\x00\x00\x12\x03\x10\x00\x30\x03\x10\x64\x62\x79\x65\x21\x3f\xe4";
+     //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x09\x00\x00\x00\x00\x12\x03\x10\x00\x30\x03\x10\x64\x62\x79\x65\x21\x3f\xe4";
 
    // char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x41\x43\x4b\x03\x56\xeb"; // ACK
 
-    char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2"; // 123
+    //char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00\x00\x00\x00\x12\x03\x30\x30\x01\x02\x03\xda\xe2"; // 123
 
 
     
