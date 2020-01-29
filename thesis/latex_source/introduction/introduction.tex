@@ -1,111 +1,85 @@
 \chapter{Introduction and Motivation}
 \label{thesis:introduction}
-Scalability and improvement of Internet of Things (IoT) devices and protocols
-are important research questions.
-Low Power Wide Area Networks (LPWANs) technology offers long-range communication
-with low power requirements. Battery powered LPWAN devices can run for years.
-For instance, a node sending 100B once a day lasts for 17 years \cite{morin}.
-LoRa (short for Long Range) is a spread spectrum modulation
-technique, a wireless radio frequency (RF) technology for long-range and low power platforms
-and has become the de facto technology for IoT networks worldwide \cite{what_is_lora}.
-LoRaWAN is the open standard backed by the LoRa Alliance. It is a communication protocol and
-Medium Access Control (MAC) protocol built on the physical LoRa layer.
-LoRaWAN is designed from the bottom up to optimize LPWANs
-for battery lifetime, capacity, range, and cost \cite{what_is_lora_wan}.
-There are 142 countries with LoRaWAN deployments, 121 network operators,
-and 76 LoRa Alliance member operators. Swisscom, Amazon, IBM, CISCO are merely a few of the 
-notable LoRa Alliance members \cite{lora_alliance}.
-The Things Network (TTN), also a LoRa Alliance member, provides a worldwide LoRaWAN network 
-for and from the community. Anyone with a LoRa gateway can register their gateway on TTN, thereby
-extending the network's reach. At the time of writing, TTN has 95'208 members, 9'786 gateways, and is
-present in 147 countries \cite{ttn}. LoRaWAN operates in the unlicensed Industrial, Scientific and Medical (ISM)
-radio bands. Therefore no government license is required to operate LoRa devices and gateways. 
-This allows hobbyists, enthusiasts and developers to quickly get started and open networks, such as TTN,
-to grow rapidly.
-\\
-In a typical LoRaWAN use case, an IoT device, such as a sensor, sends data out over the air. Then a LoRa gateway picks
-the signal up, decodes it, and forwards it over the Internet to the network server which then can send the packet to 
-the application server. If needed, a response message can be scheduled on the network server which then chooses the best gateway
-to send the response back to the IoT device.
-LoRa gateways carry the full implementation of the LoRa PHY (the physical layer), the LoRaWAN protocol, as well as 
-the packet forwarder. This architecture of the LoRa gateway can be separated and the technological stack on the gateway can 
-be reduced by running the signal processing functions not on the gateway itself but in a cloud / centralized environment on general purpose hardware. Such a Cloud / Centralized Radio
-Access Network (C-RAN) has been previously shown to be beneficial in the 3rd Generation Partnership
-Project (3GPP) Long Term Evolution (LTE) \cite{Sousa2016}. The gateway then is left with only minimal functionality it has to support.
-As the decoding does not take place on the gateway itself, it does not need do have any LoRa specific hardware e.g the SX1276 transceiver chip
-found on LoRa devices and gateways. Rather, the gateway is equipped with an antenna, an amplifier as well as digital to analog (DAC) and 
-analog to digital (ADC) converters. This is called the Remote Radio Head (RRH). On the upstream, the RRH receives LoRa radio signals which it converts into an In-phase and quadrature 
-(I/Q) sample stream with the ADC and simply forwards them to the cloud signal processing unit over Ethernet. This virtualized component is the Baseband Unit (BBU).
-On the downstream the BBUt streams a LoRa signal as I/Q samples to the RRH which converts it with the DAC to an analog signal and 
-propagates it out over the air. Signals are encoded and decoded on the BBU. There are many advantages in such 
-a setup, but they come at a cost. The first advantage is that the gateway can be kept at a much simpler design resulting in significant manufacturing
-cost reduction. Also, modifications to the LoRa PHY or LoRaWAN are easier to introduce as the physical layer is implemented in software. 
-Gateways that are once deployed do not need to be physically replaced in case of an upgrade as they are agnostic to the underlying protocol and
-just convert and transceive (transmit and receive) I/Q samples. Updates to the protocol can be realized with just updating the software implementation. 
-A Low Power Network (LPN) provider saves cost by not having to drive out to the deployed gateways throughout the country to upgrade their versions.
-The disadvantage is the high throughput of the I/Q samples stream between the gateway and the BBU. Streaming the I/Q samples between RRH and BBU 
-has significantly higher bandwidth requirements than just demodulating the signal on the gateway and forwarding the decoded LoRa packet as it is done 
-in the traditional setup. Extracting part of the LoRa gateways and replacint it with software also brings the advantages of setting the base for Software Defined Networking (SDN) and 
-Network Function Virtualization (NFV) by centralizing the BBUs that were before distributed on the individual gateways.
-The goal of this work is setting up a C-RAN architecture for LoRa by simplifying the gateways as described above and moving the signal processing out of the 
-gateway into software component that can be virtualized with for example Docker.
+%Scalability and improvement of Internet of Things (IoT) devices and protocols are important research questions.
+Low Power Wide Area Networks (LPWANs) technology offers long-range communication with low power requirements in the Internet of Things (IoT) use-cases. 
+Using LPWANs, battery powered devices can run for years.
+For instance, a node sending 100 B once a day using LoRa (short for Long Range) lasts for 17 years~\cite{morin}.
+LoRa is a spread spectrum modulation technique and a wireless radio frequency (RF) technology for long-range and low power platforms.
+It has become a de facto technology of choice for IoT networks worldwide~\cite{what_is_lora}.
+Moreover, LoRaWAN is an open standard backed by the LoRa Alliance. 
+It is a communication protocol and Medium Access Control (MAC) protocol built on the physical LoRa layer.
+LoRaWAN is designed ``bottom up'' to optimize LPWANs for battery lifetime, capacity, range, and cost~\cite{what_is_lora_wan}.
+There are 142 countries with LoRaWAN deployments, 121 network operators, and 76 LoRa Alliance member operators. 
+Swisscom, Amazon, IBM, CISCO are merely a few of the notable LoRa Alliance members~\cite{lora_alliance}.
+The Things Network (TTN), also a LoRa Alliance member, provides a worldwide LoRaWAN network for the TTN community. 
+Anyone with a LoRa gateway can register their gateway with TTN, thereby, extending the network coverage. 
+At the time of writing this document, TTN has 95'208 members, 9'786 gateways, and is present in 147 countries~\cite{ttn}. 
+LoRaWAN operates in the unlicensed Industrial, Scientific and Medical (ISM) radio bands. 
+Therefore, no government license is required to operate LoRa devices and gateways. 
+This allows hobbyists, enthusiasts, and developers to quickly start and develop networks, such as TTN, that rapidly grow.
 
+In a typical LoRaWAN use case, an IoT device, such as a sensor, sends its data over the air. 
+Then a LoRa gateway picks up the signal, decodes it, and forwards a received data packet over the Internet to the network server, which can, further on, forward the packet to the application server. 
+If needed, a response message can be scheduled by the network server, which selects the best gateway to deliver the response back to the IoT device.
+Regular LoRa gateways implement the LoRa PHY (i.e., the physical layer), the LoRaWAN protocol (i.e., MAC) as well as an Internet Protocol (IP)-based packet forwarder all together.
+However, the architecture of the LoRa gateway can be easily divided into separate subsystems and the protocol stack can be significantly reduced as several signal processing functions may be executed in a cloud environment (i.e., not on the gateway) using a general purpose hardware. 
+The so called Cloud/Centralized Radio Access Network (C-RAN) has been previously demonstrated to be beneficial in the case of the 3rd Generation Partnership Project (3GPP)~\cite{Sousa2016} providing the cloud execution of the entire Long Term Evolution (LTE) network, in which almost all processing entities are placed in the cloud. 
+In such a cloudified case, a residual gateway could be left with marginal functionality, as demodulation and decoding do not take place on the gateway anymore.
+Therefore, such a gateway does not need any specialized hardware, i.e., the SX1276 transceiver\footnote{https://www.semtech.com/products/wireless-rf/lora-transceivers/sx1276} found on regular LoRa devices and gateways. 
+The gateway is, rather, equipped with an antenna, an amplifier as well as Digital to Analog (DAC) and Analog to Digital (ADC) converters, and is typically addressed as the Remote Radio Head (RRH). 
+(i) On the upstream, the RRH receives LoRa radio signals to convert them into an In-phase and quadrature (I/Q) sample stream using an ADC and forward the resulting samples over the Internet (e.g., using the Ethernet connection) to the cloud signal processing unit denoted as Baseband Unit (BBU). 
+(ii) On the downstream, the BBU provides a LoRa signals to the RRH, which are encoded in the form of I/Q sample stream, converted to an analog signal by the RRH using the DAC module, and propagated out over the air through an antenna.
+(iii) Finally, the signals are encoded and decoded on the cloudified BBU. 
 
-
-
+There are many advantages in such a setup, but they come at a cost. 
+The first advantage is that the gateway can be kept at a much simpler design resulting in significant manufacturing cost reduction. 
+Also, modifications to the LoRa PHY or LoRaWAN are easier to be performed as the physical layer is implemented in software. 
+Once deployed gateways do not need to be physically replaced in the case of a protocol upgrade, as the RRH is protocol-agnostic just converting radio signals into I/Q samples on the upstream and I/Q samples into signals on the downstream.
+Updates to the protocol can, therefore, be realized with just updating the software implementation. 
+Finally, a Low Power Network (LPN) provider could save cost, as it does not have to upgrade protocol versions among all the gateways deployed in the field.
+The disadvantage is obviously the high throughput of the I/Q samples stream between the RRH and the BBU. 
+Streaming the I/Q samples between RRH and BBU has significantly higher bandwidth requirements than just demodulating the signal on the gateway and forwarding the decoded LoRa packets to the network server in the traditional setup. 
+However, replacing a LoRa bespoke hardware with software components seems a natural evolution provided by Network Function Virtualization (NFV), where previously distributed regular LoRa gateways become a centralized setup, which processes radio signals on a pay as you go basis. Moreover, the application of Software Defined Networking (SDN) may allow for higher scalability of the system distributing traffic among a central pool of processing entities. Finally, such a setup can pave a way towards coordinated multi-point, where simultaneous signal processing from many RRH at the same time may further increase the performance of signal reception.
+Therefore, the goal of this work is to set up a C-RAN architecture for LoRa by simplifying the gateways as described above and moving the signal processing out of the gateway into software component that can be virtualized (e.g., using Docker\footnote{https://www.docker.com/}) and executed in the cloud environment. 
 
 \section{Description of Work}
-This work first gives a general introduction to LoRa, LoRaWAN and its applications, then dives 
-into more details regarding the LoRa physical layer. Then it gives an overview over existing 
-software implementations of the LoRa PHY. There are two main contributions. First, this work 
-implements a C-RAN for LoRa, gives an architectural overview as well as the implementation details.
-It evaluates the architectural and network related requirements by conducting an experiment. We developed a simple protocol in raw LoRa,
-meaning not compliant with the LoRaWAN standard. In this protocol physical IoT device has a queue of packets to transmit. Then depending on 
-wether it requires an acknowledgment, it waits for a few seconds for a response or just transmit the next packet in the queue in an interval.
-If the packet requires to be acknowledged but no acknowledgment is received, the same packet will put as first item in the queue.
-We investigate network utilization and effects of network delay and processing delay on this setup.
-\\
-Second, as the LoRa PHY is closed source, there is no official documentation on how the LoRa PHY is implemented.
+This work gives a general introduction to LoRa, LoRaWAN, and its applications, provides a detailed description of the LoRa physical layer, and gives an overview of existing software implementations of the LoRa PHY. 
+Furthermore, there are three main research contributions. 
+First, this thesis provides an architectural overview, specification of the system, and the implementation details of a C-RAN for LoRa.
+Second, the network related requirements are evaluated experimentally. 
+We develop a simple application protocol using an underlying LoRa network, which is not yet fully compatible with the LoRaWAN. 
+In the application protocol evaluation, a physical IoT device sends data packets towards the LoRa gateway.
+Some packets require an acknowledgment, therefore, a node has to wait a few seconds for an acknowledgement established by the gateway.
+Typically, when the sender requires an acknowledgement for a given packet, but no acknowledgment is received, the same packet will be repeated until the acknowledgement finally arrives.
+We investigate network utilization and effects of network and processing delays on the LoRa C-RAN performance.
+Third, as the LoRa PHY is closed source, there is no official documentation on how the LoRa PHY is implemented.
 The existing implementations are all reverse engineering attempts with a various degree of success. 
-They all focused first on decoding LoRa signals transmitted by a real LoRa hardware. For the C-RAN to work, not only is it 
-necessary to decode signals but also the encoding of downstream LoRa gateway signals is required. To achieve this we extended 
-an existing experimental uplink signal encoder with the ability to also generate downlink signals in software.
+They all focus on decoding LoRa signals transmitted by a regular hardware. 
+In the successful LoRa C-RAN, it is required to successfully decode signals and also encode downstream LoRa signals. 
+To achieve this, we extend an existing experimental uplink signal encoder with the ability to generate downlink signals in software.
 
 \section{Thesis Outline}
-The rest of the thesis is structured the following way.
-In chapter~\ref{chap:lora_and_lorawan} an introduction to LoRa and 
-LoRaWAN is given and where it fits compared to other wireless technology. 
-Then a more in depth explanation is given for LoRa signals, such as the modulation scheme and key 
-factors like spreading factor coding rate and packet structure.
-\\
-\\
-In the following chapter and overview of current software defined radio implementations for LoRa is given,
-how they are implemented as well as their level of sophistication. In this context the GNU Radio 
-framework is introduced as well.
-\\
-\\
-In chapter~\ref{chap:cran_in_cellular} the C-RAN architecture for cellular networks 
-is introduced to show what steps are needed to move from a traditional architecture to a C-RAN architecture
-and what benefits it can bring. 
-\\
-\\
-The next chapter continues with the main part of the thesis, namely the C-RAN for LoRa. 
-The architectural overview is given as well as the implementation details for all 
-involved components. Then the C-RAN experiment is described where 
-network utilization, network delay and processing delay are investigated.
-At the end of the chapter the results are presented.
-\\
-\\
-Chapter~\ref{chap:lora_tools} presents some tools that were developed 
-during this thesis for encoding and signal visualization that may be helpful
-for further developing LoRa processing in software.
-\\
-\\
-This ties directly into the second to last chapter where the future work 
-for a C-RAN for LoRa may lead to. It also lists some limitations of this current 
-C-RAN architecture that can be improved and further developed.
-\\
-\\
-Finally, the last chapter summarizes the key aspects and concludes this work.
+The rest of the thesis is structured in the following way.
+Chapter~\ref{chap:lora_and_lorawan} provides an introduction to LoRa and LoRaWAN.
+LoRa is also compared against other wireless technologies and an in-depth explanation of LoRa signals is given. 
+The modulation scheme and key factors such as spreading factor, coding rate, and packet structure are introduced.
+
+In the following chapter, an overview of current software defined radio implementations for LoRa is given.
+The chapter discussed various implementations and their level of sophistication. 
+The GNU Radio framework is introduced as well.
+
+In chapter~\ref{chap:cran_in_cellular}, the C-RAN architecture for cellular networks is introduced to show the steps needed to move from a traditional setup towards a C-RAN architecture.
+Several benefits of C-RAN are discussed as well.
+
+The next chapter focuses on the C-RAN for LoRa. 
+The architectural overview, system specification as well as the implementation details for all involved components are provided. 
+The C-RAN experiment is specified, in which network utilization, network delay, and processing delay are investigated.
+Finally, the chapter presents the experimental evaluation of the system.
+
+Chapter~\ref{chap:lora_tools} presents various tools that were developed during this thesis for encoding and signal visualization that may be helpful in future developments of LoRa signal processing in software.
+
+The second-last chapter discussed the future work in C-RAN for LoRa. It also lists some limitations of the current C-RAN architecture that can be improved and developed in the future.
+
+Finally, the last chapter summarizes and concludes this work.
 
 
