@@ -18,18 +18,16 @@ Ausserdem stellt diese Arbeit einen Softwaremodulator für downlink LoRa signal 
 
 
 \selectlanguage{english}
-The topic of this thesis is the design and implementation of a Cloud Radio Access Network (C-RAN)
-architecture for LoRa. LoRa is a popular modulation scheme based on the chirp spread spectrum modulation technique. It is 
-used in Low Power Wide Area Networks for Internet of Things devices. Traditionally, in a LoRa Wide Area Network, gateways receive
-signals on the uplink from end-devices and demodulated and decode the analog signal directly on the gateway itself.
-On the downlink, gateways receive a digital message from the network server and modulated and encode this message 
-as an analog signal and send it over the air as radio waves to the end-devices.
-The gateways however can be simplified by moving the demodulation and decoding, resp. modulation and encoding,
-from the gateway to general purpose hardware and implement it in software as a Baseband Unit (BBU). This leaves the gateway 
-as a Remote Radio Head (RRH). The BBUs then can be centralized and virtualized on a server.
-The C-RAN architecture in this thesis is implemented with a Software Defined Radio (SDR) and Docker for the virtualization of 
-the BBU's. Next to designing and implementing the LoRa C-RAN, this thesis studies the network requirements and the effects 
-of network and processing delay on the C-RAN. This thesis also introduces a software modulator and encoder for a downlink LoRa
-signal that can be received by real hardware. 
-
-
+The topic of this thesis is the design and implementation of a Cloud Radio Access Network (C-RAN) architecture for LoRa. 
+LoRa is a popular modulation scheme based on the chirp spread spectrum modulation technique. 
+It is used in Low Power Wide Area Networks for Internet of Things. 
+Traditionally, in a LoRa Wide Area Network, gateways receive signals on the uplink from end-devices to demodulate and decode the analog signal directly on the gateway.
+On the downlink, gateways receive a digital message from the network server and modulate and encode this message as an analog signal to send it over the air as radio waves to end-devices.
+The gateways, however, can be simplified by moving the demodulation and decoding in the receiver (resp. modulation and encoding in the sender) from the gateway to general purpose hardware running a software Base-Band Unit (BBU). 
+This leaves the gateway as a Remote Radio Head (RRH) implementing only limited capabilities, while the BBUs can be centralized and virtualized on a remote server.
+In this thesis, the C-RAN architecture is implemented with the help a Software Defined Radio (SDR) for handling radio signals as well as 
+Docker for the virtualization of BBUs. 
+To design and implement the LoRa C-RAN, this thesis studies the network requirements and the effects of network and processing delay on the C-RAN. 
+Furthermore, the C-RAN architecture is implemented with the help a Software Defined Radio (SDR) for handling radio signals as well as 
+Docker for the virtualization of BBUs. 
+Finally, this work also also introduces a software modulator and encoder for a LoRa to emit signals that can be received by real hardware on the downlink. 
