@@ -44,9 +44,9 @@ osjob_t timeoutjob;
 static void my_tx_func(osjob_t *job);
 
 int currentPacketIndex = 0;
-const int numOfPackets = 6;
+const int numOfPackets = 3;
 char *myPackets[numOfPackets] = {
-    "This is string packet 1ACK", "This is packet 2", "This is packet 3ACK",
+    "This is string packet 1ACK", "This is packet 2ACK", "This is packet 3",
     //  "This is packet 4", "This is packet 5ACK", "This is packet 6ACK"
 };
 
@@ -54,7 +54,7 @@ char *myPackets[numOfPackets] = {
 void tx(const char *str, osjobcb_t func)
 {
   LMIC.datarate = DR_SF9;
-  LMIC.rps = updr2rps(LMIC.datarate);
+   LMIC.rps = updr2rps(LMIC.datarate);
   os_radio(RADIO_RST); // Stop RX first
   delay(1);            // Wait a bit, without this os_radio below asserts, apparently because the state hasn't changed yet
   LMIC.dataLen = 0;
@@ -66,9 +66,10 @@ void tx(const char *str, osjobcb_t func)
 }
 
 // Enable rx mode and call func when a packet is received
-void rx(osjobcb_t func)
+void 
+rx(osjobcb_t func)
 {
-   LMIC.datarate = DR_SF12;
+  LMIC.datarate = DR_SF7;
   LMIC.rps = updr2rps(LMIC.datarate);
   delay(1);
   LMIC.osjob.func = func;
@@ -147,11 +148,13 @@ static void my_txdone_func(osjob_t *job)
 
 static void my_txdone_no_ack_func(osjob_t *job)
 {
+    Serial.println("no ack func");
   currentPacketIndex++;
 }
 
 static void my_tx_func(osjob_t *job)
 {
+  
   if (currentPacketIndex < numOfPackets)
   {
     if (strlen(myPackets[currentPacketIndex]) > 3)
@@ -176,16 +179,20 @@ static void my_tx_func(osjob_t *job)
         Serial.println(currentPacketIndex + 1);
         tx(myPackets[currentPacketIndex], my_txdone_no_ack_func);
       }
+      Serial.print("here");
       os_setTimedCallback(&txjob, os_getTime() + ms2osticks(TX_INTERVAL), my_tx_func);
     }
     else
     {
-      Serial.println("No more packets to send, done");
+        /* TODO 
+        packet has less than 3 characters, unsafe to compare last three character for ACK
+        send packet without ACK check  */
+     
     }
   }
   else
   {
-    /* no more packets to send */
+     Serial.println("No more packets to send, done");
   }
 }
 
@@ -219,6 +226,8 @@ void setup()
   // initialize runtime env
   os_init();
 
+  // Set up these settings once, and use them for both TX and RX
+
 #if defined(CFG_eu868)
   // Use a frequency in the g3 which allows 10% duty cycling.
   LMIC.freq = 868500000;
@@ -231,7 +240,7 @@ void setup()
   // Use a medium spread factor. This can be increased up to SF12 for
   // better range, but then the interval should be (significantly)
   // lowered to comply with duty cycle limits as well.
-  LMIC.datarate = DR_SF9;
+  LMIC.datarate = DR_SF9; 
   // This sets CR 4/5, BW125 (except for DR_SF7B, which uses BW250)
   LMIC.rps = updr2rps(LMIC.datarate);
 
@@ -247,3 +256,4 @@ void loop()
   // execute scheduled jobs and events
   os_runloop_once();
 }
+
