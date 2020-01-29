@@ -6,13 +6,13 @@ were already implemented for software defined radios.
 \\
 As this was not the case, we first had to spend a significant amount of time 
 to understand the inner workings of LoRa better. This is made more difficult by the fact 
-the the PHY layer of LoRa is proprietary and no official documentation exists.
+that the PHY layer of LoRa is proprietary and no official documentation exists.
 
 \section{Limitations}
 A first limitation is that the response signal is a recording of a real downlink signal and not 
-purely generated in software on demand. Though we developed the tools to make it possible.
+purely generated in software on demand. Nevertheless we developed the tools to make it possible.
 \\
-Second,the LoRa protocol implemented on the Arduino is "raw" LoRa and not compliant 
+Second, the LoRa protocol implemented on the Arduino is "raw" LoRa and not compliant 
 with the LoRaWan standard. This was necessary as decoding a LoRaWan packet is not yet implement in 
 the decoder, in terms of destructuring the received packet according to all the LoRaWan fields as shown
 in Figure~\ref{fig:lora_wan_struct}.
@@ -21,18 +21,18 @@ Third, the experiment, C-RAN architecture and Arduino implementation is based on
 of a single end-device and gateway in the network. In a LoRaWan, end-devices ignore downlink packets
 not destined for them. Our Arduino however happily accepts any "ACK" downlink because of the premise that 
 all downlinks are destined for it as it is the only device in the network.\\
-Further in a network with multiple gateways, an uplink signal get picked up by multiple gateways and 
-forwarded to the network server. Then the network server discards duplicates and decided over which gateway
+Further in a network with multiple gateways, an uplink signal gets picked up by multiple gateways and 
+forwarded to the network server. Then the network server discards duplicates and decides over which gateway
 the downlink response is sent. In our network however there is only one RRH.
 
 \section{Improvements}
-Improvements can be made to the protocol implementation can be made. Though, instead
+Improvements to the protocol implementation can be made. Though, instead
 of improving this protocol, it makes far more sense to adopt the LoRaWan protocol.
 The LoRaWan protocol is an open protocol. Implementing it on the decoder requires the 
 necessary time and knowledge. The Arduino could already speak the LoRaWan protocol with 
 the help of the LMIC library which offers a fairly complete LoRaWan Class A device implementation.
 \\
-On network server side an initial improvement would be to dynamically generate the response signal
+On network server side, an initial improvement would be to dynamically generate the response signal
 by incorporating the encoder for downlink signals in the architecture.
 \\ \\
 Further, there is only one decoder / BBU running because there is only one Arduino sending on one channel.
@@ -48,7 +48,7 @@ MQTT broker. For downlink scheduling the chirpstack network server sends the mes
 back to the gateway for modulation and transmission. For the C-RAN architecture where the downlink is modulated 
 in software and not on the gateway anymore, this would need a redesign where the RRH simply receives the I/Q samples
 to transmit without having to do any LoRa modulation. Then the chirpstack application server could be 
-added for free givin a nice web-interface similar to the TTN interface, but instead of 
+added for free, giving a nice web-interface similar to the TTN interface, but instead of 
 traditional LoRaWan network architecture a C-RAN LoRaWan architecture is running.
 \\ \\
 For further developing the centralized / cloud aspect of C-RAN, the BBUs instead of running on a single host
@@ -59,7 +59,7 @@ essentially providing C-RAN as a service as demonstrated for LTE by in~\cite{Nik
 Finally, it needs to be investigated why the decoder cannot successfully decode I/Q samples of a single signal streamed over and ethernet connection as TCP/IP packets 
 if a network delay of more than 500ms is emulated on the connection. Also, there are some open issues on the 
 GitHub repo of the decoder and a few items that are not yet implemented such as multichannel decoding and 
-CRC checks for payload and header. However, the decoder itself is not scope of this thesis and is just mentioned here for 
+CRC checks for payload and header. However, the decoder itself is not in scope of this thesis and is just mentioned here for 
 completeness.
 
 

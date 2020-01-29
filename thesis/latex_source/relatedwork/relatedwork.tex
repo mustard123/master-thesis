@@ -5,11 +5,11 @@ spread spectrum technology\cite{what_is_lora}.
 Originally developed by Cycleo, a french company, LoRa has been acquired by Semtech~\cite{limits_lora}.
 LoRa signals spread over multiple frequencies using the whole available bandwidth.
 This makes the signal more resilient against noise on a disrupting frequency. As LoRa
-signal are sent over the unlicensed ISM bands, this resilience is an important factor.
+signals are sent over the unlicensed ISM bands, this resilience is an important factor.
 While LoRa is the modulation technique on the physical layer, LoRaWAN on the other hand 
 is an open communication protocol backed by the Lora Alliance. LoRaWAN specifies packet format,
 duty cycles, key exchanges and many more things needed for an efficient and cooperative LoRa network.
-A LoRa network is and LPWAN where battery powered devices can stay operating up to 17 years, making LoRa
+A LoRa network is a LPWAN where battery powered devices can stay operating up to 17 years, making LoRa
 a popular choice for IoT devices as shown in the example given in the introduction in chapter~\ref{thesis:introduction}. 
 The TTN network for example is used for cattle tracking, smart irrigation as well as smart parking applications~\cite{ttn}.
 
@@ -22,7 +22,7 @@ The TTN network for example is used for cattle tracking, smart irrigation as wel
 
 Figure~\ref{fig:lora_context} shows LoRa compared two other wireless technologies, Wi-Fi and cellular. Both Wi-Fi and cellular
 are high in bandwidth with cellular having a longer range than Wi-Fi. They both have a much higher power consumption compared to LoRa.
-LoRa has lower bandwidth but a high range. In a experiment during a TTN conference LoRa signals from a low orbit satellite were received~\cite{loa_satellite}.
+LoRa has lower bandwidth but a high range. In an experiment during a TTN conference, LoRa signals from a low orbit satellite were received~\cite{loa_satellite}.
 On the other hand, as LoRa is designed for long-range and low power, only few bytes are transmitted per day while Wi-Fi and cellular are capable of video streaming.
 In urban areas LoRa has a range of 2-5 km and 15 km in suburban areas~\cite{limits_lora}.\\
 LoRaWAN is not the same all around the world. There are regional parameters that come into play, one is for example the frequency band.
@@ -33,7 +33,7 @@ settings are regulated by the government and thus are not the same for all regio
 A LoRaWAN network architecture is a star-of-stars topology. The gateways relay the messages between the end-devices and a central network server.
 Gateways are connected to the network server via IP connections, converting the RF packets to IP packets and vice versa~\cite{about_lora_wan}.
 Network nodes are not associated with a specific gateway, rather messages sent by a node can be received by multiple gateways. Each gateway will then 
-forward the the message to the network server who does the complex things such as filtering redundant packages, security checks, forwarding the messages
+forward the message to the network server which does the complex things such as filtering redundant packages, security checks, forwarding the messages
 to the right application server etc.~\cite{what_is_lora_wan}.
 As network communication is bidirectional, the network server is also responsible for scheduling responses to the end-nodes. There are different classes of 
 end-nodes which will be described in the next section.
@@ -52,7 +52,7 @@ The Figure also shows how security is built into LoRaWAN. The payload is end-to-
 A unique 128-bit network session key is shared between the end-device and the network server and 
 another 128-bit application session key is shared end-to-end at the application level~\cite{about_lora_wan}.
 With those measures LoRaWAN prevents eavesdropping. Spoofing is prevented by a MIC (Message Integrity Code)
-in the MAC payload, and replay attacks are prevent by utilizing frame counters~\cite{lora_security}.
+in the MAC payload, and replay attacks are prevented by utilizing frame counters~\cite{lora_security}.
 
 \section{End-node Classes}
 There are three classes of end-devices. The following description is adapted from the LoRa Alliance guide~\cite{about_lora_wan,what_is_lora}:
@@ -60,7 +60,7 @@ There are three classes of end-devices. The following description is adapted fro
     \item Class A, Lowest power, bi-directional end-devices:\\
     \\
     This is the default class, supported by all LoRaWAN devices.
-    It is always the end-node that initiates the communication. After an uplink
+    It is always the end-node that initiates the communication. After an uplink,
     two downlink windows open for the end-device to receive a response, enabling bi-directional communication.
     Either the first is used, or the second, but not both receive windows.
     The end-device can rest in low-power sleep mode, wake up when it needs to send a packet, receive a response
@@ -86,7 +86,7 @@ There are three classes of end-devices. The following description is adapted fro
 \subsection{Chirps}
 A LoRa signal is a series of so called chirps as LoRa is derived from the Chirp Spread Spectrum modulation (CSS) technique. 
 There are up-chirps and down-chirps. In CSS chirps are deliberately spread across the available bandwidth. Up-chirps go from low frequency 
-to high frequency and down-chirps go from high frequency to low frequency. In Europe the LoRaWAN signal bandwidth is 125 kHz. Assuming a center
+to high frequency and down-chirps go from high frequency to low frequency. In Europe the LoRaWAN signal bandwidth is 125 kHz with one exception. Assuming a center
 frequency of 868.5 MHz, which is in the European ISM band, a full up-chirp, so called sweep, would go from 868.4375 MHz to 868.5625 MHz.
 
 \begin{figure}[h]
@@ -119,7 +119,7 @@ The spreading factor determines the number of encoded bits in a symbol.
 In the shown recording one symbol holds 9 bits of data as the spreading factor of that signal was set to 9.
 It follows that a symbol has $2^{SF}$ values. Those values range from 0 to 511 in case of SF 9. A sweep signal of SF 9
 thus has 512 chips (no to be confused with chirps)~\cite{lora_symbol_mobilefish}.
-The chips go linearly from low to high and then wrap around once the maximum frequency is reached.
+The chips go linearly from low to high and then wrap around, once the maximum frequency is reached.
 \\
 In Figure~\ref{fig:fict_symbols} a fictional symbol with SF 7 is shown. This particular 
 arrangement of chips highlighted in orange would denote the symbol "1011111". Those 7 bits correspond 
@@ -131,9 +131,9 @@ to the decimal value 95.
     \label{fig:fict_symbols}
 \end{figure}
 
-In Figure \ref{fig:Goodbye_decoded}, a real world example is shown. The same LoRa signal as in Figure~\ref{fig:Goodbye} with SF 9 with the message "Goodbye !"
+In Figure \ref{fig:Goodbye_decoded}, a real world example is shown. The same LoRa signal as in Figure~\ref{fig:Goodbye} with SF 9 showing the message "Goodbye !"
 run through modified version of the LoRa decoder by Robyns et al.~\cite{robyns} and then through a python script where we match the samples to the symbols and their 
-values. The last symbols encodes the hex value 142 which corresponds to these 9 bits "101000010". In a SF 9 signal each symbol encodes 9 bits.
+values. The last symbol encodes the hex value 142 which corresponds to these 9 bits "101000010". In a SF 9 signal each symbol encodes 9 bits.
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{figures/Goodbye_decoded.png}
@@ -145,13 +145,13 @@ values. The last symbols encodes the hex value 142 which corresponds to these 9 
 LoRa signals are encoded with a coding rate (CR). The CR denotes the proportion of how many bits carry actual information. The bits that do not carry information are used 
 for Forward Error Correction. The formula for coding rate is $CR=4/(4 + CR)$ where CR $\in \{1,2,3,4\}$. A CR of 1 is thus the proportion of 4/5 of actual information over 
 bits used for error correction\cite{SX_design_guide,coding_rate_mobilefish}.
-With FEC, corrupted bits e.g. due to interference can be corrected. With CR of 4, corresponds to $4/8 = 1/2$, half the transmitted bits carry information, the other half is for FEC.
+With FEC, corrupted bits e.g. due to interference, can be corrected. With CR of 4, corresponds to $4/8 = 1/2$, half the transmitted bits carry information, the other half is for FEC.
 The higher the CR (from 1-4) the more bits can get corrupted and corrected by FEC.
 On the other hand, the higher the CR the more bits need to be transmitted which drains the battery more.
 
 \subsection{Spreading Factor \& Time on Air}
 The longer the packet, the longer the transmission time. LoRa packets can be shortened
-by sending packets with implicit header mode where the
+by sending packets in implicit header mode where
 no header is sent and the settings that would have been specified in the header have to be 
 predefined manually on the end-device.\\
 Assuming constant packet size and same bandwidth, varying the spreading factor increases resp. decreases the time on air.
@@ -163,16 +163,16 @@ It follows as stated above, that the higher the SF the longer the symbol duratio
 the symbol duration. In Europe the BW is 125~kHz, while in North America a BW of 500~kHz is allowed.
 It also follows that with an increase in SF by 1 the symbol duration is doubled. The bit rate $R_{b}$  is then defined by 
 $R_{b} = SF*\frac{[\frac{4}{4 * CR}]}{[\frac{2^{SF}}{BW}]}$ with CR being the coding rate for the error correction scheme~\cite{lora_modulation_basics}.
-It follows from the formula that the higher the coding rate the lower the bit rate as with a higher CR more redundancy is added 
+It follows from the formula that the higher the coding rate the lower the bit rate, as with a higher CR more redundancy is added 
 for the error correction scheme. Highest data rate for $BW=125~kHz$ and $CR=1$ is achieved 
 with SF 7 resulting in a data rate of 5.5 kbits/s and the lowest data rate is achieved with SF 12 resulting in a data rate 0.29 kbits/s.
 \\
 The spreading factors are orthogonal to each other, meaning signals on different spreading factors do not interfere with each other. This is 
-Code Division Multiple Access (CDMA) where a shared medium i.e. the bandwidth is optimized for multiple access.
+Code Division Multiple Access (CDMA) where a shared medium is used and the bandwidth is optimized for multiple access.
 \\
 To optimize network capacity LoRaWAN employs a method called Adaptive Data Rate (ADR). With ADR the network server signals 
-the end-device which spreading factor to use according to some measurements including the signal to noise ratio. Assuming there are multiple devices near a gateway 
-that transmit with SF 12. This occupies the bandwidth for device that are farther away and actually need SF 12.
+the end-device which spreading factor to use according to some measurements including the signal to noise ratio. Let's assume there are multiple devices near a gateway 
+that transmit with SF 12. This occupies the bandwidth for devices that are farther away and actually need SF 12.
 The network server detects that the nearby devices do not need a spreading factor of 12 and signal them to use 
 a lower SF such as SF 7 or SF 8. The ADR setting has to be enabled on the end-devices and can be disabled.
 
@@ -225,7 +225,7 @@ shows.
 \section{LoRa signal (downlink)}
 LoRa downlinks signals are the inverse of an uplink signal. 
 This lets end-devices or gateways easily differentiate between uplink and downlink.
-An Arduino end-device can then ignore all uplinks signals as it will only ever expect a downlink signal it may need to process.
+An Arduino end-device can then ignore all uplink signals as it will only ever expect a downlink signal it may need to process.
 Gateways on the other hand can ignore downlink signals as they are only interested in uplink signals.
 Figure~\ref{fig:lora_down_sig} shows a downlink signal with SF 12 and coding rate 4/5 sent from LoRa gateway. It encodes the payload "ACK".
 \begin{figure}[h]
@@ -245,14 +245,15 @@ do not have a CRC after the payload as shown in Figure\ref{fig:downlink_struct}.
 \end{figure}
 
 The 10 preamble chirps that are up chirps in an uplink signal are now down chirps.
+\newpage
 The 2 start of frame delimiter chirps that are down chirps in an  uplink signal are now up chirps.
-The question remains if the data chirps are flipped as well. In fact, the data chirps are flipped as well 
-as we have discovered. This will be described more in chapter~\ref{chap:lora_tools}.
+The question remains if the data chirps are flipped as well. In fact, the data chirps are flipped as well, 
+as we have discovered. This will be elaborated on more in chapter~\ref{chap:lora_tools}.
 
 
 \chapter{LoRa in SDRs}
-Software-defined radios (SDR) implement components that are usually implemented in hardware.
-The most popular signal processing frameworks is GNU Radio
+Software-defined radios (SDR) use components that are usually implemented in hardware.
+The most popular signal processing framework is GNU Radio.
 For LoRa we were looking for an existing implementation that demodulates, and also modulates LoRa signals.
 
 \section{Existing implementations}
@@ -263,8 +264,8 @@ There are three existing implmentations we looked at:
     \item Robyns et al. LoRa Module for GNU Radio \url{https://github.com/rpp0/gr-lora}
 \end{itemize}
 
-We tried Blum's implementation in the Pothos  first. The Pothos projects is an open source data-flow framework
-supporting SoapySDR, a general framework for supporting SDR devices~\cite{pothos}.
+We tried Blum's implementation in the Pothos first. The Pothos projects is an open source data-flow framework
+supporting SoapySDR, a general framework for enabling SDR devices~\cite{pothos}.
 Unfortunately the LoRa modem demo application did not work for us at all. After spending a few unsuccessful days 
 trying to get to the issue we moved to Knight's application.
 
@@ -297,7 +298,7 @@ explicitly before passing the stream to the demodulator block.
 Figure~\ref{fig:knight_gnu} shows the typical flow of a GNU Radio flowgraph where data is passed 
 from block to block as a stream (blue connection ports) or as message blocks (grey connection ports).
 \\
-Robyns' implementation is also an OOT module for GNU Radio. It has a elaborate 
+Robyns' implementation is also an OOT module for GNU Radio. It has an elaborate 
 installation and usage guide. A docker environment is also provided for testing the 
 decoding of a LoRa signal, which is a big plus. Unlike Knight's implementation, this module
 has demodulation, decoding and channelization all in one single block as shown in Figure~\ref{fig:robyns_gnu}. 
@@ -315,25 +316,24 @@ well for us and we based the C-RAN implementation for LoRa on this module.
 The difficulty with reverse engineering LoRa is that its proprietary and
 there is no official documentation on the PHY. To reverse engineer, information hints
 on the PHY layer have to be taken from various official LoRaWAN documents, from patents, and the 
-rest is guesswork. To make it more difficulty, some of the documentation is a lie as the PHY is not implement 
-in the way it is described. 
-complete lie, see Knight~\cite{knight_youtube}. 
+rest is guesswork. To make it more difficult, some of the documentation is a lie as the PHY is not implemented 
+in the way it is described, see Knight~\cite{knight_youtube}. 
 The data is encoded before it is sent over the air to make it more resistant against interference.
 Thus after demodulating the signal with a Fourier Transform, the data has to be decoded to make it usable.
 Semtech's European patent hints at the following four steps:
 \begin{enumerate}
-    \item Symbol gray indexing. This adds error tolerance
+    \item Symbol gray indexing. This adds error tolerance.
     \item Data whitening. This induces randomness.
-    \item Interleaving. This scrambles the bits within a frame
+    \item Interleaving. This scrambles the bits within a frame.
     \item Forward Error Correction. This adds correction parity bits.
     
 \end{enumerate}
-Those are 4 distinct operation which have to be reverse engineered~\cite{knight_youtube}.\\
+Those are 4 distinct operations which have to be reverse engineered~\cite{knight_youtube}.\\
 Robyns et al. identified and implemented the following seven steps in their receiver to 
 receive and decode a LoRa signal: detection, synchronization, demodulation, deinterleaving, dewhitening,
 decoding, and packet construction~\cite{robyns_implementation}. They also provide a detailed description of the 
 packet structure, especially the header. They deduce that because the minimum SF is SF 7, and the header is always 
-transmitted mit CR = 4, it must fit in an interleaving matrix of a certain size which results int the header heaving a size of 
+transmitted mit CR = 4, it must fit in an interleaving matrix of a certain size which results in the header heaving a size of 
 40 bits. The header contains important data as the payload length, thus it makes sense that the header is always sent with the highest
 coding rate.
 At the time of Knight's talk, he did not decode the header. Robyns implementation is quite complete except for CRC checks of the payload and header
@@ -375,11 +375,11 @@ Also this enables the BBU for Network Function Virtualization (NFV) and the RAN 
 
 \section{Virtual RAN}
 In virtual RAN the execution environment is abstracted i.e. virtualized.
-Radio functions applications operate on a virtualized environment and interact
+Radio function applications operate in a virtualized environment and interact
 with physical resources directly or through hardware emulation.
 Such a cloud environment enables RAN as a service~\cite{Nikaein2015}.
 For C-RAN this means instead of having a separate standalone physical device
-for each BBU in the BBU hotel the BBUs now can run on a single physical server with each
+for each BBU in the BBU hotel, the BBUs now can run on a single physical server with each
 BBU in a virtualized environment. \\
 Nikaein et al. describe two main steps for realizing a C-RAN namely:
 \begin{itemize}
@@ -387,7 +387,7 @@ Nikaein et al. describe two main steps for realizing a C-RAN namely:
     \item \textbf{Virtualization and Cloudification} which is the execution of network functions and management of physical resources by a cloud OS~\cite{Nikaein2015}.
 \end{itemize}
 
-Nikaein et al. found that containers e.g. docker proved to be more adequate in their RAN as a service experiment as the offer near bare metal performance
-and provide direct access to the RF hardware. Virtual machines in, particular KVM, also gave them good performance, but require low latency mechanism to access I/O resources.
+Nikaein et al. found that containers e.g. Docker proved to be more adequate in their RAN as a service experiment as they offer near bare metal performance
+and provide direct access to the RF hardware. Virtual machines in, particular KVM, also gave them good performance, but require low latency mechanisms to access I/O resources.
 \\
-For the C-RAN for LoRa, described in chapter~\ref{chap:cran_for_lora}, docker is used for the virtualization layer.
+For the C-RAN for LoRa, described in chapter~\ref{chap:cran_for_lora}, Docker is used for the virtualization layer.

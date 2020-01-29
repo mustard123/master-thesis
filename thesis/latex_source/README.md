@@ -3,7 +3,7 @@
 An Arduino with a LoRa shield sends out packets over the air in an interval.
 Some packets require an acknowledgment (ACK). If an ACK is required, the Arduino waits for a certain amount of time for the ACK. If the ACK arrives in time, the Arduino starts transmitting the next packet. If not, the Arduino will resend the packet and again wait for the ACK.
 
-The RRH (Remote Radio Head) receives radio waves with a LimeSDR. The RRH streams the IQ samples over the network the the BBU (Base Band Unit).
+The RRH (Remote Radio Head) receives radio waves with a LimeSDR. The RRH streams the IQ samples over the network to the BBU (Base Band Unit).
 
 The BBU decodes the message. If the message says it require and ACK, the BBU send out IQ samples of the ACK message over the network to the RRH which transmits them back over the air to the Arduino.
 
