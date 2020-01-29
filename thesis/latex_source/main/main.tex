@@ -9,7 +9,7 @@ A simple network server should process the uplink message and schedule a respons
 basic network requirements can be derived and measured as well as costs estimated.
 
 \section{Hardware}
-An Arduino Mega 2560 with the Dragion LoRa Shield v1.4 is the end-device, see Figure~\ref{fig:ard}.
+An Arduino Mega 2560 with the Dragino LoRa Shield v1.4 is the end-device, see Figure~\ref{fig:ard}.
 A LimeSDR mini, Figure~\ref{fig:sdr}, serves as the receiver for the RRH.
 The Raspberry Pi, Figure~\ref{fig:rasp} with a LoRa hat was used for testing up -and downlink signals, but not for the experiment itself. 
 Its hat is the iC880A LoRaWAN concentrator for the 868MHz frequency.
@@ -53,7 +53,7 @@ One laptop has the LimeSDR mini plugged in and serves as the RRH. The other deco
 signal in software, processes the signal and also generates LoRa signals in software and sends those downlink I/Q samples back to the RRH.
 The processes on the second laptop run in virtualized environment with Docker, more specifically Docker compose, Docker's orchestration tool.
 \\
-The LoRa OOT module by Robyns et al. has a branch called "encoder" where they began the implementation of modulating an uplink LoRa signal in software.
+The LoRa OOT module by Robyns' et al. has a branch called "encoder" where they began the implementation of modulating an uplink LoRa signal in software.
 It is able to generate a specific test packet but the modulated signal has errors as we saw when we inspected the data payload on the LoRa gateway.
 Having an uplink signal generator was a nice starting point, but we needed something to generate downlink signal. In the end we extended the existing implementation
 by adding a downlink signal generation ability, see section~\ref{chap:lora_tools}.
@@ -597,7 +597,7 @@ for TX/RX processing~\cite{Nikaein2015}, LoRaWAN, at least for Class A devices, 
 
 \chapter{LoRa Tools}
 \label{chap:lora_tools}
-\section{Getting a Downlink signal}
+\section{Getting a Downlink Signal}
 With the Arduino we could generate raw LorRa signal, record them with the SDR and save them to a file for inspection.
 However, getting a downlink signal was not that straightforward. 
 In this section, three methods of getting a downlink signal are presented that were tried.
@@ -763,13 +763,12 @@ moving the pointer forward by how many samples were consumed.\\
 Whenever the decoder calls the demodulate function, we print the value and at which sample it occurred to a csv file.\\
 This file and the I/Q sample file are the inputs to the visualization script which then produces a spectrogram chart. \\
 Figure~\ref{fig:123_ard} shows an uplink signal sent with the Arduino, Figure~\ref{fig:123_enc} the signal generated with the encoder.
-In the original implementation the number of bytes to transmit was set to match only the tespacket. We added the implementation of the formula in
-~\ref{sec:pkt_structure} to adjust the number of bytes to transmit dynamically.
-This fixed the issue that before, the signal from the encoder did not have 18 symbols like the signal from the Arduino.
-Now the number of symbols in the encoder generated signal corresponds to the number of symbols in the Arudino signal, however 
+In the original implementation the number of bytes to transmit was set to match only the testpacket. We added the implementation of the formula in
+~\ref{sec:pkt_structure} to adjust the number of bytes resp. the number of symbols to transmit dynamically.
+This fixed the issue that before, the generated signal from the encoder did not have 18 symbols like the signal from the Arduino.
+Now the number of symbols in the encoder generated signal corresponds to the number of symbols in the Arduino signal, however 
 the symbol values do not.
-
-
+\\
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{figures/123_SF7_CR4_5_arduino.png}
@@ -780,9 +779,52 @@ the symbol values do not.
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{figures/123_SF7_CR4_5_from_encode_18_symbols.png}
-    \caption{123, SF 7, CR 4/5, sent generated with encoder}
+    \caption{123, SF 7, CR 4/5, generated with encoder}
     \label{fig:123_enc}
 \end{figure}
+
+Before we implemented this fix the generated uplink signal showed a "CRC\_BAD" error in the packet logger logfile on the gateway , shown in Figure~\ref{fig:crc_bad}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/crc_bad.png}
+    \caption{CRC\_BAD error on the gateway, payload goes from 010203..20D0A0}
+    \label{fig:crc_bad}
+\end{figure}
+
+The testpacket, shown in Listing~\ref{lst:testpacket} wrapped over multiple lines, has a payload 
+that goes from "01020304.." to "..22". The last to bytes are the CRC. The number 17 under the H1 comment 
+sets the packet length, as the first byte in the header indicates the length for the rest of the packet.
+The number 17 is hexadecimal for the number 23 which is exactly the payload length, from 0 to 22.
+\\
+After implementing the correct calculation for number of symbols and bytes, the gateway shows us the 
+expected payload and a "CRC\_OK" message, shown in Figure~\ref{fig:crc_ok}.
+
+\begin{listing}[h]
+    \begin{minted}[frame=single,linenos=false]{c++}
+ // Temporary         ve  pa      le              fq  bw  sf  pr 
+  char test_pkt[] = "\x00\x00\x12\x00\x00\xa1\xbc\x33\x01\x07\x00" 
+  //mr  cr  sn  sy  H1  H1  H1  payload
+  "\x00\x00\x00\x12\x17\x91\xa0\x00\x01\x02\x03\x04\x05\x06\x07\x08"
+  // rest of payload    
+  "\x09\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x20\x21\x22\xb8\x73";
+        \end{minted}
+        \caption{The testpacket is a string of hex values encoded in ASCII}
+        \label{lst:testpacket}
+\end{listing}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{figures/crc_error_fix.png}
+    \caption{CRC\_OK message on the gateway, payload goes from 010203..22}
+    \label{fig:crc_ok}
+\end{figure}
+
+However, if we remove a byte from the the payload and adjust the length byte in the header from 
+"\textbackslash x17" to "\textbackslash x16", the gateway does not log the packet anymore, and on the downlink the Arduino does not print 
+the packet in its rx function as well. \\
+The encoder seems to only produce a valid packet, uplink as well as downlink, for a packet with a length of 23 bytes.
+
 
 
 
